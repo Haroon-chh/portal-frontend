@@ -1,25 +1,31 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, createWebHashHistory } from 'vue-router';
+import LoginView from '../views/LoginView.vue'; // Importing the Login view
 
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView
+    name: 'login',  // Make the root path redirect to the login page
+    component: LoginView,
+    meta: { title: 'Login' }
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  }
-]
+    path: '/login',
+    name: 'login',
+    component: LoginView,
+    meta: { title: 'Login' }
+  },
+
+];
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes
-})
+});
 
-export default router
+// Global navigation guard to dynamically change the title based on route meta
+router.beforeEach((to, from, next) => {
+  document.title = to.meta.title || 'Default App Title'; // Change page title
+  next();
+});
+
+export default router;
