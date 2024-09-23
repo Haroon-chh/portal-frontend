@@ -36,7 +36,6 @@ const router = createRouter({
 // Global route guard for authentication and role checks
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!JSON.parse(localStorage.getItem('authUser')); // Check if user is logged in
-  const userRole = isAuthenticated ? JSON.parse(localStorage.getItem('authUser')).authorization.role : null;
 
   // Check if the route requires authentication
   if (to.matched.some(record => record.meta.requiresAuth)) {
