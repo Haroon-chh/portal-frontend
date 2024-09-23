@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'; // Use createWebHistory for clean URLs
 import LoginView from '../views/LoginView.vue'; // Importing the Login view
+import RegistrationView from '../views/RegistrationView.vue'; // Importing the Login view
+import DashboardView from '../views/DashboardView.vue'; // import your DashboardView
+
+
 
 const routes = [
   {
@@ -11,7 +15,18 @@ const routes = [
     name: 'login',
     component: LoginView,
     meta: { title: 'Login' }
-  }
+  },
+  {
+    path: '/registration',
+    name: 'registration',
+    component: RegistrationView,
+    meta: { title: 'Registration' }
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: DashboardView,
+  },
 ];
 
 const router = createRouter({

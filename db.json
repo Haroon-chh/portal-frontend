@@ -1,0 +1,38 @@
+{
+    "users": [
+      {
+        "id": 1,
+        "name": "Test User",
+        "email": "test@example.com",
+        "password": "test123",
+        "message": "success",
+        "authorization": {
+          "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
+          "role": "student"
+        }
+      },
+      {
+        "id": 2,
+        "name": "Admin User",
+        "email": "admin@example.com",
+        "password": "admin123",
+        "message": "success",
+        "authorization": {
+          "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
+          "role": "admin"
+        }
+      },
+      {
+        "id": 3,
+        "name": "Manager User",
+        "email": "manager@example.com",
+        "password": "manager123",
+        "message": "success",
+        "authorization": {
+          "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
+          "role": "manager"
+        }
+      }
+    ]
+  }
+  

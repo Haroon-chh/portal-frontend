@@ -1,6 +1,6 @@
 <template>
     <div class="login-body p-0">
-      <div class="login-card">
+      <div class="login-card row">
         <div class="col-lg-7 form-container d-flex flex-column justify-content-center p-0">
           <div class="card-body p-5">
             <p class="text-center h2 fw-semibold mb-4 mx-1 mx-md-4 mt-2">Login as a User</p>
@@ -26,7 +26,7 @@
             </form>
           </div>
         </div>
-        <div class="col-lg-5 image-container d-flex justify-content-center align-items-center">
+        <div class="col image-container d-flex justify-content-center align-items-center">
           <div class="text-center text-black w-100 h-100 p-4 d-flex flex-column justify-content-center">
             <button class="btn btn-light border d-flex align-items-center justify-content-center shadow-sm my-3 px-1 w-100">
               <img src="../assets/google-icon.png" width="35px" alt="Google" class="p-1">
@@ -39,7 +39,7 @@
             </button>
   
             <hr>
-            <p class="mt-2 pt-2">Not a user? <router-link to="/signup" class="btn btn-primary">Sign Up</router-link></p>
+            <p class="mt-2 pt-2">Not a user? <router-link to="/registration" class="btn btn-primary">Sign Up</router-link></p>
           </div>
         </div>
       </div>
@@ -87,17 +87,17 @@
     align-items: center;
     height: 100vh;
     margin: 0%;
-    background-image: url(../assets/bg3.jpg);
+    background-image: url(../assets/educational_background.jpg);
     background-size: cover;
   }
   
   .login-card {
-    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.7);
     min-width: 50%;
     display: flex;
     overflow: hidden;
-    background-color: rgba(255, 255, 255, 0);
-    color: white;
+    background-color: rgba(189, 185, 185, 0.3);
+    color: black;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
   
@@ -127,7 +127,7 @@
     width: 100%;
     padding: 8px;
     font-size: 16px;
-    border: 1px solid #ccc;
+    border: 1px solid #070707;
     border-radius: 6px;
     outline: none;
     background-color: transparent;
@@ -145,7 +145,7 @@
     left: 40px;
     background-color: rgba(255, 255, 255, 0);
     padding: 0 5px;
-    color: #aaa;
+    color:white;
     transition: 0.3s ease all;
     pointer-events: none;
     font-size: 14px;
@@ -156,7 +156,7 @@
     top: -25px;
     left: 25px;
     font-size: 16px;
-    color: #ffffff;
+    color:black;
     background-color: rgba(255, 255, 255, 0);
   }
   
