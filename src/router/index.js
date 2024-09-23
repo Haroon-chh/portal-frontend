@@ -1,24 +1,21 @@
-import { createRouter, createWebHashHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router'; // Use createWebHistory for clean URLs
 import LoginView from '../views/LoginView.vue'; // Importing the Login view
 
 const routes = [
   {
     path: '/',
-    name: 'login',  // Make the root path redirect to the login page
-    component: LoginView,
-    meta: { title: 'Login' }
+    redirect: '/login' // Redirect the root path to /login
   },
   {
     path: '/login',
     name: 'login',
     component: LoginView,
     meta: { title: 'Login' }
-  },
-
+  }
 ];
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(), // Use createWebHistory for cleaner URLs
   routes
 });
 

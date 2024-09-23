@@ -1,5 +1,5 @@
 <template>
-    <div class="login-view-container">
+    <div>
       <Login />
     </div>
   </template>
@@ -15,11 +15,6 @@
   </script>
   
   <style scoped>
-  .login-view-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
+  
   </style>
   
