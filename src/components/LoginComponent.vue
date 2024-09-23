@@ -27,7 +27,10 @@
           </div>
         </div>
         <div class="col image-container d-flex justify-content-center align-items-center">
+
           <div class="text-center text-black w-100 h-100 p-4 d-flex flex-column justify-content-center">
+            <img src="../assets/child_read.png" alt="" class="w-75  d-flex flex-column justify-content-center m-auto">
+
             <button class="btn btn-light border d-flex align-items-center justify-content-center shadow-sm my-3 px-1 w-100">
               <img src="../assets/google-icon.png" width="35px" alt="Google" class="p-1">
               <span>Login with Google</span>
@@ -49,34 +52,55 @@
   <script setup>
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
-  
+  import axios from 'axios'; // To handle API requests
+  import { useStore } from 'vuex'; // If you're using Vuex for state management
+
   const email = ref('');
   const password = ref('');
   const router = useRouter();
-  
-  const login = () => {
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    let foundUser = users.find(user => user.email === email.value && user.password === password.value);
-  
-    if (foundUser) {
-      foundUser.lastLogin = new Date().toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
+  const store = useStore(); // Vuex store
+
+  const login = async () => {
+    try {
+      // Make API call to db.json server for login
+      const response = await axios.get(`http://localhost:3000/users`, {
+        params: {
+          email: email.value,
+          password: password.value,
+        },
       });
-  
-      localStorage.setItem("users", JSON.stringify(users));
-      localStorage.setItem("authUser", JSON.stringify(foundUser));
-      router.push("/apiProducts");
-    } else {
-      alert("Wrong email or password. Please try again.");
+
+      // Check if response contains data
+      const user = response.data.find(
+        (u) => u.email === email.value && u.password === password.value
+      );
+
+      if (user && user.message === 'success') {
+        // Store the JWT token in sessionStorage
+        sessionStorage.setItem('jwtToken', user.authorization.token);
+
+        // Store the role in localStorage
+        localStorage.setItem('userRole', user.authorization.role);
+
+        // Store the entire user in localStorage as 'authUser'
+      localStorage.setItem('authUser', JSON.stringify(user));
+
+
+        // Optional: Store user in Vuex state
+        store.commit('setUser', user);
+
+        // Redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        alert('Invalid credentials. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      alert('An error occurred. Please try again later.');
     }
   };
-  </script>
+</script>
+
   
   <style scoped>
   /* Styles moved here */
@@ -93,7 +117,7 @@
   
   .login-card {
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.7);
-    min-width: 50%;
+    width: 50%;
     display: flex;
     overflow: hidden;
     background-color: rgba(189, 185, 185, 0.3);
@@ -107,7 +131,7 @@
   }
   
   .image-container {
-    background-color: #e8e8e8;
+    background-color: #DFF4FF;
     width: 40%;
   }
   

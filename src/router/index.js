@@ -1,42 +1,61 @@
-import { createRouter, createWebHistory } from 'vue-router'; // Use createWebHistory for clean URLs
-import LoginView from '../views/LoginView.vue'; // Importing the Login view
-import RegistrationView from '../views/RegistrationView.vue'; // Importing the Login view
-import DashboardView from '../views/DashboardView.vue'; // import your DashboardView
-
-
+import { createRouter, createWebHistory } from 'vue-router'; 
+import LoginView from '../views/LoginView.vue'; 
+import RegistrationView from '../views/RegistrationView.vue'; 
+import DashboardView from '../views/DashboardView.vue'; 
 
 const routes = [
   {
     path: '/',
-    redirect: '/login' // Redirect the root path to /login
+    redirect: '/login' 
   },
   {
     path: '/login',
     name: 'login',
     component: LoginView,
-    meta: { title: 'Login' }
+    meta: { title: 'Login', requiresAuth: false } // No auth required
   },
   {
     path: '/registration',
     name: 'registration',
     component: RegistrationView,
-    meta: { title: 'Registration' }
+    meta: { title: 'Registration', requiresAuth: false } // No auth required
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
+    meta: { title: 'Dashboard', requiresAuth: true } // Auth required
   },
 ];
 
 const router = createRouter({
-  history: createWebHistory(), // Use createWebHistory for cleaner URLs
+  history: createWebHistory(),
   routes
 });
 
-// Global navigation guard to dynamically change the title based on route meta
+// Global route guard for authentication and role checks
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title || 'Default App Title'; // Change page title
+  const isAuthenticated = !!JSON.parse(localStorage.getItem('authUser')); // Check if user is logged in
+  const userRole = isAuthenticated ? JSON.parse(localStorage.getItem('authUser')).authorization.role : null;
+
+  // Check if the route requires authentication
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      next('/login');
+    } else {
+      // Allow access if authenticated, else redirect to login
+      next();
+    }
+  } else {
+    // Proceed to the route if no auth is required
+    next();
+  }
+});
+
+// Dynamically change the document title
+router.beforeEach((to, from, next) => {
+  document.title = to.meta.title || 'Default App Title';
   next();
 });
 

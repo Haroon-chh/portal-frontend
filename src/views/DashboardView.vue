@@ -26,12 +26,12 @@
     },
     methods: {
       fetchUser() {
-        // Fetch the user from local storage (or from your mock server if API is available)
-        const storedUser = JSON.parse(localStorage.getItem('AuthUser'));
+        // Fetch the authenticated user from local storage
+        const storedUser = JSON.parse(localStorage.getItem('authUser'));
         if (storedUser) {
           this.user = storedUser;
         } else {
-          // If no user is found, redirect to login page or handle error
+          // In case the user data is missing, redirect to login page
           this.$router.push('/login');
         }
       },
@@ -53,4 +53,8 @@
     },
   };
   </script>
+  
+  <style scoped>
+  /* You can add your scoped styles here */
+  </style>
   

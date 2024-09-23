@@ -4,7 +4,7 @@
         "id": 1,
         "name": "Test User",
         "email": "test@example.com",
-        "password": "test123",
+        "password": "test1234",
         "message": "success",
         "authorization": {
           "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
