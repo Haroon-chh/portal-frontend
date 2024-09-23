@@ -50,55 +50,52 @@
   </template>
   
   <script setup>
-  import { ref } from 'vue';
-  import { useRouter } from 'vue-router';
-  import axios from 'axios'; // To handle API requests
-  import { useStore } from 'vuex'; // If you're using Vuex for state management
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex'; // If you're using Vuex for state management
+import ApiServices from '@/services/ApiServices'; // Import the ApiServices
 
-  const email = ref('');
-  const password = ref('');
-  const router = useRouter();
-  const store = useStore(); // Vuex store
+const email = ref('');
+const password = ref('');
+const router = useRouter();
+const store = useStore(); // Vuex store
 
-  const login = async () => {
-    try {
-      // Make API call to db.json server for login
-      const response = await axios.get(`http://localhost:3000/users`, {
-        params: {
-          email: email.value,
-          password: password.value,
-        },
-      });
+const login = async () => {
+  try {
+    // Use the GetRequest method from ApiServices
+    const response = await ApiServices.GetRequest('users', {
+      email: email.value,
+      password: password.value
+    });
 
-      // Check if response contains data
-      const user = response.data.find(
-        (u) => u.email === email.value && u.password === password.value
-      );
+    // Find the user matching the credentials
+    const user = response.find(
+      (u) => u.email === email.value && u.password === password.value
+    );
 
-      if (user && user.message === 'success') {
-        // Store the JWT token in sessionStorage
-        sessionStorage.setItem('jwtToken', user.authorization.token);
+    if (user) {
+      // Store the JWT token in sessionStorage
+      sessionStorage.setItem('jwtToken', user.authorization?.token || '');
 
-        // Store the role in localStorage
-        localStorage.setItem('userRole', user.authorization.role);
+      // Store the role in localStorage
+      localStorage.setItem('userRole', user.authorization?.role || '');
 
-        // Store the entire user in localStorage as 'authUser'
+      // Store the entire user in localStorage as 'authUser'
       localStorage.setItem('authUser', JSON.stringify(user));
 
+      // Optional: Store user in Vuex state
+      store.commit('setUser', user);
 
-        // Optional: Store user in Vuex state
-        store.commit('setUser', user);
-
-        // Redirect to dashboard
-        router.push('/dashboard');
-      } else {
-        alert('Invalid credentials. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error during login:', error);
-      alert('An error occurred. Please try again later.');
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } else {
+      alert('Invalid credentials. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Error during login:', error.message);
+    alert('An error occurred. Please try again later.');
+  }
+};
 </script>
 
   
@@ -210,4 +207,3 @@
     }
   }
   </style>
-  

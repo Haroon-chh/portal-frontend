@@ -2,7 +2,7 @@ import Vue from 'vue';
 import axios from "axios";
 import VueAxios from "vue-axios";
 
-const baseURL = 'http://localhost:3000';
+const baseURL = 'http://localhost:3001/';
 
 const ApiServices = {
   init() {
@@ -11,32 +11,25 @@ const ApiServices = {
     axios.defaults.headers.common["Content-Type"] = "application/json";
   },
 
-  async GetRequest(url) {
+  async GetRequest(endpoint, params) {
     try {
-      const response = await axios({
-        method: "GET",
-        url: url,
-        headers: { Authorization: "Bearer " + localStorage.getItem("jwtToken") }
-      });
-      return response.data; // Return the response data directly
+      const response = await axios.get(`${baseURL}${endpoint}`, { params });
+      return response.data;
     } catch (error) {
       console.error('GET request failed:', error);
-      throw new Error('Error fetching data.'); // Throw an error to be handled in the calling function
+      throw error;
     }
   },
 
-  async PostRequest(url, data) {
+  async PostRequest(endpoint, data) {
     try {
-      const response = await axios({
-        method: "POST",
-        url: url,
-        data: data, // Include the data in the request
+      const response = await axios.post(`${baseURL}${endpoint}`, data, {
         headers: { Authorization: "Bearer " + localStorage.getItem("jwtToken") }
       });
       return response.data; // Return the response data directly
     } catch (error) {
       console.error('POST request failed:', error);
-      throw new Error('Error posting data.'); // Throw an error to be handled in the calling function
+      throw error; // Throw the original error to be handled in the calling function
     }
   }
 };
