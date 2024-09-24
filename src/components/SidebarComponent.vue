@@ -1,53 +1,68 @@
 <template>
   <aside :class="{ 'is-expanded': isExpanded }" class="sidebar">
-    <div class="logo">
-    </div>
+    <div class="logo"></div>
 
     <button class="menu-toggle" @click="toggleMenu">
       <span class="material-icons">{{ isExpanded ? 'keyboard_double_arrow_left' : 'keyboard_double_arrow_right' }}</span>
     </button>
 
     <nav class="menu">
+      <!-- Admin-specific options -->
       <router-link to="/dashboard" class="menu-item">
         <span class="material-icons">dashboard</span>
         <span v-if="isExpanded" class="text">Dashboard</span>
       </router-link>
-      <!-- new icons need to be done -->
-      <router-link to="/dashboard/form" class="menu-item">
+
+      <router-link v-if="authUserRole === 'admin' && authUserPermissions.addManagers" to="/dashboard/add-manager" class="menu-item">
         <span class="material-icons">person_add</span>
-        <span v-if="isExpanded" class="text">Data Entry</span>
-      </router-link>
-      <router-link to="/dashboard/form/table" class="menu-item">
-        <span class="material-icons">show_chart</span>
-        <span v-if="isExpanded" class="text">Current Data</span>
+        <span v-if="isExpanded" class="text">Add Manager</span>
       </router-link>
 
-      <router-link to="/apiProducts" class="menu-item">
-        <span class="material-icons">api</span>
-        <span v-if="isExpanded" class="text">Api Products</span>
+      <router-link v-if="authUserRole === 'admin' && authUserPermissions.assignRoles" to="/dashboard/assign-roles" class="menu-item">
+        <span class="material-icons">assignment_ind</span>
+        <span v-if="isExpanded" class="text">Assign Roles</span>
       </router-link>
 
-      <router-link to="/addProducts" class="menu-item">
-        <span class="material-icons">add_circle</span>
-        <span v-if="isExpanded" class="text">Add Products</span>
+      <router-link v-if="authUserRole === 'admin' && authUserPermissions.viewQuizzesResults" to="/dashboard/view-results" class="menu-item">
+        <span class="material-icons">bar_chart</span>
+        <span v-if="isExpanded" class="text">View Results</span>
       </router-link>
-
-    
-      <InitialsAvatar />
-
-    
       
+      <router-link v-if="authUserRole === 'admin' && authUserPermissions.assignQuizzesToStudents" to="/dashboard/assign-quizzes" class="menu-item">
+        <span class="material-icons">quiz</span>
+        <span v-if="isExpanded" class="text">Assign Quizzes</span>
+      </router-link>
+
+
+      <!-- Manager-specific options -->
+      <router-link v-if="authUserRole === 'manager' && authUserPermissions.assignQuizzesToStudents" to="/dashboard/assign-quizzes" class="menu-item">
+        <span class="material-icons">quiz</span>
+        <span v-if="isExpanded" class="text">Assign Quizzes</span>
+      </router-link>
+      <router-link v-if="authUserRole === 'manager' && authUserPermissions.viewStudentDetails" to="/dashboard/student-details" class="menu-item">
+        <span class="material-icons">groups</span>
+        <span v-if="isExpanded" class="text">Student Details</span>
+      </router-link>
+
+      <!-- Student-specific options -->
+      <router-link v-if="authUserRole === 'student' && authUserPermissions.assignedQuizzes" to="/student/assigned-quizzes" class="menu-item">
+        <span class="material-icons">assignment</span>
+        <span v-if="isExpanded" class="text">Assigned Quizzes</span>
+      </router-link>
+      <router-link v-if="authUserRole === 'student' && authUserPermissions.quizResults" to="/student/quiz-results" class="menu-item">
+        <span class="material-icons">show_chart</span>
+        <span v-if="isExpanded" class="text">Quiz Results</span>
+      </router-link>
+
+      
+
       <div class="logout-container">
-      <button class="btn btn-danger logout-button" @click="logout">
-        <span class="material-icons">logout</span>
-        <span v-if="isExpanded">Logout</span>
-      </button>
-    </div>
-      <!-- Add other menu items here -->
+        <button class="btn btn-danger logout-button" @click="logout">
+          <span class="material-icons">logout</span>
+          <span v-if="isExpanded">Logout</span>
+        </button>
+      </div>
     </nav>
-
-    <!-- Logout Button -->
-
   </aside>
 </template>
 
@@ -57,7 +72,17 @@ export default {
   data() {
     return {
       isExpanded: false,
+      authUserRole: '',      // Store user role
+      authUserPermissions: {} // Store user permissions
     };
+  },
+  created() {
+    const authUser = JSON.parse(localStorage.getItem('authUser'));
+
+    if (authUser && authUser.authorization) {
+      this.authUserRole = authUser.authorization.role;
+      this.authUserPermissions = authUser.authorization.permissions;
+    }
   },
   methods: {
     toggleMenu() {
@@ -85,16 +110,15 @@ export default {
           localStorage.setItem('users', JSON.stringify(users));
         }
 
-         // Clear the AuthUser from localStorage
-         localStorage.setItem("authUser", JSON.stringify(null));
+        localStorage.setItem("authUser", JSON.stringify(null));
       }
 
-      // Redirect to the login page using Vue Router
       this.$router.push('/login');
-    },
-  },
+    }
+  }
 };
 </script>
+
 
 <style scoped>
 /* Basic Variables */
