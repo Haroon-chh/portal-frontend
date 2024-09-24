@@ -1,13 +1,29 @@
 <template>
-  <div id="app">
-    <router-view />
-  </div>
+  <div v-if="!hideSidebar">
+      <Sidebar />
+    </div>
+
+    <div :class="{ 'main-content': !hideSidebar }">
+      <router-view></router-view>
+    </div>
 </template>
 
 <script>
+import Sidebar from '@/components/SidebarComponent.vue';
 export default {
   name: 'App',
+  components: {
+    Sidebar
+  },
+  computed: {
+    hideSidebar() {
+      // Check the current route and hide sidebar on Login or Signup
+      const routeName = this.$route.name;
+      return routeName === 'Login' || routeName === 'Signup';
+    },
+  },
 };
+
 </script>
 
 <style lang="scss">
