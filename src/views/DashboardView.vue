@@ -24,26 +24,27 @@
     },
     data() {
       return {
-        user: null,
+        userRole: null,
       };
     },
     mounted() {
-      this.fetchUser();
+      this.fetchUserRole();
     },
     methods: {
-      fetchUser() {
-        // Fetch the authenticated user from local storage
-        const storedUser = JSON.parse(localStorage.getItem('authUser'));
-        if (storedUser) {
-          this.user = storedUser;
+      fetchUserRole() {
+        // Fetch the user role from local storage
+        const storedUserRoles = JSON.parse(localStorage.getItem('userRole'));
+        if (storedUserRoles && Array.isArray(storedUserRoles)) {
+          this.userRole = storedUserRoles;
         } else {
-          // In case the user data is missing, redirect to login page
+          // In case the user role is missing, redirect to login page
           this.$router.push('/login');
         }
       },
       getComponentByRole() {
-        if (this.user && this.user.authorization.role) {
-          switch (this.user.authorization.role) {
+        if (this.userRole && this.userRole.length > 0) {
+          // Return the first role's component for simplicity
+          switch (this.userRole[0]) {
             case 'student':
               return 'StudentComponent';
             case 'manager':
@@ -65,4 +66,3 @@
     margin-bottom: 5%;
   }
   </style>
-  
