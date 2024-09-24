@@ -1,6 +1,9 @@
 <template>
+  <div class="header">     
+         <Header title="Welcome to Dashboard" />
+      </div>
     <div>
-      <component :is="getComponentByRole()" />
+        <component :is="getComponentByRole()" />
     </div>
   </template>
   
@@ -8,6 +11,8 @@
   import StudentComponent from '../components/StudentComponent.vue';
   import ManagerComponent from '../components/ManagerComponent.vue';
   import AdminComponent from '../components/AdminComponent.vue';
+  import Header from '../components/HeaderComponent.vue';
+
   
   export default {
     name: 'DashboardView',
@@ -15,6 +20,7 @@
       StudentComponent,
       ManagerComponent,
       AdminComponent,
+      Header
     },
     data() {
       return {
@@ -55,6 +61,8 @@
   </script>
   
   <style scoped>
-  /* You can add your scoped styles here */
+  .header{
+    margin-bottom: 5%;
+  }
   </style>
   

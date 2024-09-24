@@ -54,15 +54,14 @@
         <span v-if="isExpanded" class="text">Quiz Results</span>
       </router-link>
 
-      
-
-      <div class="logout-container">
-        <button class="btn btn-danger logout-button" @click="logout">
-          <span class="material-icons">logout</span>
-          <span v-if="isExpanded">Logout</span>
-        </button>
-      </div>
     </nav>
+
+    <div class="logout-container">
+      <button class="btn btn-danger logout-button" @click="logout">
+        <span class="material-icons">logout</span>
+        <span v-if="isExpanded">Logout</span>
+      </button>
+    </div>
   </aside>
 </template>
 
@@ -208,6 +207,7 @@ export default {
 
 .logout-container {
   padding: 1rem;
+  margin-top: auto; /* Pushes the logout button to the bottom */
 }
 
 .logout-button {
