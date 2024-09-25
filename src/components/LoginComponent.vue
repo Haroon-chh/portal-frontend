@@ -47,18 +47,25 @@
         </div>
       </div>
     </div>
-  </template>
-  
-  <script setup>
-import { ref } from 'vue';
+  <ErrorPopupComponent :show="showError" :message="errorMessage" />
+</template>
+
+<script setup>
+import { ref, defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex'; // If you're using Vuex for state management
 import ApiServices from '@/services/ApiServices'; // Import the ApiServices
+import ErrorPopup from './ErrorPopup.vue';
+
+const ErrorPopupComponent = defineComponent(ErrorPopup);
 
 const email = ref('');
 const password = ref('');
 const router = useRouter();
 const store = useStore(); // Vuex store
+
+const showError = ref(false);
+const errorMessage = ref('');
 
 const login = async () => {
   try {
@@ -74,11 +81,19 @@ const login = async () => {
       // Redirect to dashboard
       router.push('/dashboard');
     } else {
-      alert('Invalid credentials. Please try again.');
+      throw new Error('Unexpected response format');
     }
   } catch (error) {
-    console.error('Error during login:', error.message);
-    alert('An error occurred. Please try again later.');
+    console.error('Error during login:', error);
+    if (error.response && error.response.status === 401) {
+      errorMessage.value = error.response.data.message || 'Invalid credentials';
+    } else {
+      errorMessage.value = 'An error occurred. Please try again later.';
+    }
+    showError.value = true;
+    setTimeout(() => {
+      showError.value = false;
+    }, 5000); // Hide the error after 5 seconds
   }
 };
 </script>
