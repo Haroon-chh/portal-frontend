@@ -41,22 +41,14 @@
   
             <!-- Phone Number Field -->
             <div class="d-flex flex-row align-items-center mb-4 pb-2 form-outline">
-              <select v-model="countryCode" class="form-control" style="width: 30%;" required>
-                <option value="+1">+1 (USA)</option>
-                <option value="+44">+44 (UK)</option>
-                <option value="+91">+91 (India)</option>
-                <!-- Add more country codes as needed -->
-              </select>
-              <input 
-                type="tel" 
-                v-model="phoneNumber" 
-                class="form-control" 
-                placeholder="" 
-                required 
-                minlength="7"
-                maxlength="11"
-                pattern="[0-9]{7,11}"
-                style="width: 70%;"
+              <vue-tel-input 
+                v-model="phoneData.phoneNumber"
+                v-model:country="phoneData.country"
+                :preferred-countries="['US', 'GB', 'IN']"
+                :valid-characters-only="true"
+                :max-len="11"
+                @validate="validatePhone"
+                required
               />
               <label class="form-label">Phone Number</label>
             </div>
@@ -84,24 +76,40 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
+import { VueTelInput } from 'vue-tel-input';
 
 export default {
+  components: {
+    VueTelInput,
+  },
   setup() {
     const firstName = ref('');
     const lastName = ref('');
     const email = ref('');
-    const countryCode = ref('+1');
-    const phoneNumber = ref('');
+    const phoneData = reactive({
+      phoneNumber: '',
+      country: null,
+    });
+    const isPhoneValid = ref(false);
     const cvFile = ref(null);
+
+    const validatePhone = ({ isValid, phoneNumber, countryCallingCode }) => {
+      isPhoneValid.value = isValid;
+      if (isValid) {
+        phoneData.phoneNumber = `+${countryCallingCode}${phoneNumber}`;
+      } else {
+        phoneData.phoneNumber = '';
+      }
+    };
 
     const handleFileUpload = (event) => {
       cvFile.value = event.target.files[0];
     };
 
     const register = () => {
-      if (!firstName.value || !lastName.value || !email.value || !phoneNumber.value) {
-        alert('All fields are required.');
+      if (!firstName.value || !lastName.value || !email.value || !phoneData.phoneNumber || !isPhoneValid.value) {
+        alert('All fields are required and phone number must be valid.');
         return;
       }
 
@@ -118,7 +126,8 @@ export default {
         firstName: firstName.value,
         lastName: lastName.value,
         email: email.value,
-        phoneNumber: `${countryCode.value}${phoneNumber.value}`,
+        phoneNumber: phoneData.phoneNumber,
+        country: phoneData.country,
         cv: cvFile.value ? cvFile.value.name : '',
         createdAt: new Date().toISOString(),
       };
@@ -135,10 +144,10 @@ export default {
       firstName,
       lastName,
       email,
-      countryCode,
-      phoneNumber,
+      phoneData,
       handleFileUpload,
       register,
+      validatePhone,
     };
   },
 };
@@ -239,5 +248,8 @@ export default {
     left: 40%;
   }
 }
+
+.vue-tel-input {
+  width: 100%;
+}
 </style>
-  
