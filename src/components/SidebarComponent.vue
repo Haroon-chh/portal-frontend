@@ -66,53 +66,60 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
+import ApiServices from '@/services/ApiServices';
+
 export default {
   name: 'SidebarComponent',
   data() {
     return {
       isExpanded: false,
-      authUserRole: '',      // Store user role
-      authUserPermissions: {} // Store user permissions
+      authUserRole: '',
+      authUserPermissions: {}
     };
   },
   created() {
-    const authUser = JSON.parse(localStorage.getItem('authUser'));
-
-    if (authUser && authUser.authorization) {
-      this.authUserRole = authUser.authorization.role;
-      this.authUserPermissions = authUser.authorization.permissions;
-    }
+    this.loadUserData();
   },
   methods: {
+    ...mapActions(['logoutUser']),
+    
+    loadUserData() {
+      const authUser = JSON.parse(localStorage.getItem('authUser'));
+      if (authUser && authUser.data) {
+        this.authUserRole = authUser.data.roles[0];
+        this.authUserPermissions = authUser.data.permissions;
+      }
+    },
     toggleMenu() {
       this.isExpanded = !this.isExpanded;
     },
-    logout() {
-      let authUser = JSON.parse(localStorage.getItem('authUser'));
-
-      if (authUser) {
-        authUser.lastLogin = new Date().toLocaleString('en-US', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        });
-
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        let foundUserIndex = users.findIndex(user => user.email === authUser.email);
-
-        if (foundUserIndex !== -1) {
-          users[foundUserIndex].lastLogin = authUser.lastLogin;
-          localStorage.setItem('users', JSON.stringify(users));
+    async logout() {
+      try {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+          throw new Error('No token found');
         }
 
-        localStorage.setItem("authUser", JSON.stringify(null));
-      }
+        const response = await ApiServices.PostRequest('/logout', {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-      this.$router.push('/login');
+        if (response.data && response.data.message === "Successfully logged out") {
+          // Call the logoutUser action from the store
+          await this.logoutUser();
+          
+          // Redirect to login page
+          this.$router.push('/login');
+        } else {
+          throw new Error('Logout failed');
+        }
+      } catch (error) {
+        console.error('Error during logout:', error.message);
+        alert('An error occurred during logout. Please try again.');
+      }
     }
   }
 };
