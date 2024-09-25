@@ -62,25 +62,14 @@ const store = useStore(); // Vuex store
 
 const login = async () => {
   try {
-    // Call the API to authenticate and get the response with JWT, role, and permissions
     const response = await ApiServices.PostRequest('/login', {
       email: email.value,
       password: password.value
     });
 
-    if (response.message === "success" && response.authorisation) {
-      // Store the JWT token in sessionStorage
-      sessionStorage.setItem('jwtToken', response.authorisation.token);
-
-      // Store the role and permissions in localStorage
-      localStorage.setItem('userRole', JSON.stringify(response.role));
-      localStorage.setItem('userPermissions', JSON.stringify(response.permission));
-
-      // Store the entire user data in localStorage as 'authUser'
-      localStorage.setItem('authUser', JSON.stringify(response));
-
-      // Optional: Store user in Vuex state if needed
-      store.commit('setUser', response);
+    if (response.data && response.data.message === "success") {
+      // Use the loginUser action from the store
+      await store.dispatch('loginUser', response.data);
 
       // Redirect to dashboard
       router.push('/dashboard');
