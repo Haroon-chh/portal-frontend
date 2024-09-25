@@ -4,6 +4,9 @@
       <div class="col-lg-12 form-container d-flex flex-column justify-content-center">
         <div class="card-body p-4">
           <p class="text-center h2 fw-semibold mb-4 mx-1 mx-md-4 mt-2">Register Form</p>
+          <div v-if="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
           <form class="mx-1 mx-md-4" @submit.prevent="register">
             <!-- First Name and Last Name Fields -->
             <div class="d-flex flex-row align-items-center mt-5 mb-4 pb-2 form-outline">
@@ -11,7 +14,6 @@
                 type="text" 
                 v-model="firstName" 
                 class="form-control" 
-                placeholder="" 
                 required 
               />
               <label class="form-label">First Name</label>
@@ -21,7 +23,6 @@
                 type="text" 
                 v-model="lastName" 
                 class="form-control" 
-                placeholder="" 
                 required 
               />
               <label class="form-label">Last Name</label>
@@ -33,7 +34,6 @@
                 type="email" 
                 v-model="email" 
                 class="form-control" 
-                placeholder="" 
                 required 
               />
               <label class="form-label">Email</label>
@@ -41,15 +41,13 @@
   
             <!-- Phone Number Field -->
             <div class="d-flex flex-row align-items-center mb-4 pb-2 form-outline">
-              <vue-tel-input 
-                v-model="phoneData.phoneNumber"
-                v-model:country="phoneData.country"
-                :preferred-countries="['US', 'GB', 'IN']"
-                :valid-characters-only="true"
-                :max-len="11"
-                @validate="validatePhone"
-                required
+              <input 
+                type="tel" 
+                v-model="phone" 
+                class="form-control" 
+                required 
               />
+              <label class="form-label">Phone Number</label>
             </div>
   
             <!-- CV Upload -->
@@ -58,6 +56,7 @@
                 type="file" 
                 @change="handleFileUpload" 
                 class="form-control" 
+                required
               />
               <label class="form-label">Upload CV</label>
             </div>
@@ -75,78 +74,77 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue';
-import { VueTelInput } from 'vue-tel-input';
+import { ref } from 'vue';
+import ApiService from '../services/ApiServices';
 
 export default {
-  components: {
-    VueTelInput,
-  },
   setup() {
     const firstName = ref('');
     const lastName = ref('');
     const email = ref('');
-    const phoneData = reactive({
-      phoneNumber: '',
-      country: null,
-    });
-    const isPhoneValid = ref(false);
+    const phone = ref('');
     const cvFile = ref(null);
-
-    const validatePhone = ({ isValid, phoneNumber, countryCallingCode }) => {
-      isPhoneValid.value = isValid;
-      if (isValid) {
-        phoneData.phoneNumber = `+${countryCallingCode}${phoneNumber}`;
-      } else {
-        phoneData.phoneNumber = '';
-      }
-    };
+    const errorMessage = ref('');
 
     const handleFileUpload = (event) => {
       cvFile.value = event.target.files[0];
     };
 
-    const register = () => {
-      if (!firstName.value || !lastName.value || !email.value || !phoneData.phoneNumber || !isPhoneValid.value) {
-        alert('All fields are required and phone number must be valid.');
+    const register = async () => {
+      errorMessage.value = '';
+
+      if (!firstName.value || !lastName.value || !email.value || !phone.value || !cvFile.value) {
+        errorMessage.value = 'All fields are required, including a valid phone number and CV upload.';
         return;
       }
 
-      let users = JSON.parse(localStorage.getItem('users')) || [];
-      let emailExists = users.some(user => user.email === email.value);
+      const name = `${firstName.value} ${lastName.value}`;
 
-      if (emailExists) {
-        alert('Email already exists.');
-        return;
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email.value);
+      formData.append('phone', phone.value);
+      formData.append('attachment', cvFile.value);
+
+      try {
+        const response = await ApiService.PostRequest('/apply', formData);
+
+        if (response.status === 200) {
+          errorMessage.value = 'Registration successful: ' + response.message;
+          // Clear form fields after successful submission
+          firstName.value = '';
+          lastName.value = '';
+          email.value = '';
+          phone.value = '';
+          cvFile.value = null;
+        } else {
+          errorMessage.value = 'Unexpected response: ' + response.message;
+        }
+      } catch (error) {
+        console.error('Error occurred', error);
+        if (error.response && error.response.data) {
+          if (error.response.data.validator) {
+            const validatorErrors = error.response.data.validator;
+            errorMessage.value = Object.values(validatorErrors).flat().join(' ');
+          } else if (error.response.data.message) {
+            errorMessage.value = error.response.data.message;
+          } else {
+            errorMessage.value = 'An unexpected error occurred during registration.';
+          }
+        } else {
+          errorMessage.value = 'Error during registration: ' + (error.message || 'Unknown error');
+        }
       }
-
-      let newUser = {
-        id: users.length + 1,
-        firstName: firstName.value,
-        lastName: lastName.value,
-        email: email.value,
-        phoneNumber: phoneData.phoneNumber,
-        country: phoneData.country,
-        cv: cvFile.value ? cvFile.value.name : '',
-        createdAt: new Date().toISOString(),
-      };
-
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-
-      alert('Registration successful!');
-      // Redirect to login page if needed
-      // this.$router.push('/login');
     };
 
     return {
       firstName,
       lastName,
       email,
-      phoneData,
+      phone,
       handleFileUpload,
       register,
-      validatePhone,
+      errorMessage,
     };
   },
 };
@@ -248,7 +246,9 @@ export default {
   }
 }
 
-.vue-tel-input {
-  width: 100%;
+.error-message {
+  color: red;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 </style>

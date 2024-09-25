@@ -24,12 +24,14 @@ const ApiServices = {
   async PostRequest(endpoint, data) {
     try {
       const response = await axios.post(`${baseURL}${endpoint}`, data, {
-        headers: { Authorization: "Bearer " + localStorage.getItem("jwtToken") }
+        headers: { 
+          "Content-Type": "multipart/form-data",
+        }
       });
-      return response.data; // Return the response data directly
+      return response.data;  // Return just the response data
     } catch (error) {
       console.error('POST request failed:', error);
-      throw error; // Throw the original error to be handled in the calling function
+      throw error;
     }
   }
 };
