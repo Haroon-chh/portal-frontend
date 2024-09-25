@@ -7,53 +7,55 @@
     </button>
 
     <nav class="menu">
-      <!-- Admin-specific options -->
+      <!-- Common option for all roles -->
       <router-link to="/dashboard" class="menu-item">
         <span class="material-icons">dashboard</span>
         <span v-if="isExpanded" class="text">Dashboard</span>
       </router-link>
 
-      <router-link v-if="authUserRole === 'admin' && authUserPermissions.addManagers" to="/dashboard/add-manager" class="menu-item">
-        <span class="material-icons">person_add</span>
-        <span v-if="isExpanded" class="text">Add Manager</span>
-      </router-link>
-
-      <router-link v-if="authUserRole === 'admin' && authUserPermissions.assignRoles" to="/dashboard/assign-roles" class="menu-item">
-        <span class="material-icons">assignment_ind</span>
-        <span v-if="isExpanded" class="text">Assign Roles</span>
-      </router-link>
-
-      <router-link v-if="authUserRole === 'admin' && authUserPermissions.viewQuizzesResults" to="/dashboard/view-results" class="menu-item">
-        <span class="material-icons">bar_chart</span>
-        <span v-if="isExpanded" class="text">View Results</span>
-      </router-link>
-      
-      <router-link v-if="authUserRole === 'admin' && authUserPermissions.assignQuizzesToStudents" to="/dashboard/assign-quizzes" class="menu-item">
-        <span class="material-icons">quiz</span>
-        <span v-if="isExpanded" class="text">Assign Quizzes</span>
-      </router-link>
-
+      <!-- Admin-specific options -->
+      <template v-if="authUserRole === 'admin'">
+        <router-link to="/dashboard/add-manager" class="menu-item">
+          <span class="material-icons">person_add</span>
+          <span v-if="isExpanded" class="text">Add Manager</span>
+        </router-link>
+        <router-link to="/dashboard/assign-roles" class="menu-item">
+          <span class="material-icons">assignment_ind</span>
+          <span v-if="isExpanded" class="text">Assign Roles</span>
+        </router-link>
+        <router-link to="/dashboard/view-results" class="menu-item">
+          <span class="material-icons">bar_chart</span>
+          <span v-if="isExpanded" class="text">View Results</span>
+        </router-link>
+        <router-link to="/dashboard/assign-quizzes" class="menu-item">
+          <span class="material-icons">quiz</span>
+          <span v-if="isExpanded" class="text">Assign Quizzes</span>
+        </router-link>
+      </template>
 
       <!-- Manager-specific options -->
-      <router-link v-if="authUserRole === 'manager' && authUserPermissions.assignQuizzesToStudents" to="/dashboard/assign-quizzes" class="menu-item">
-        <span class="material-icons">quiz</span>
-        <span v-if="isExpanded" class="text">Assign Quizzes</span>
-      </router-link>
-      <router-link v-if="authUserRole === 'manager' && authUserPermissions.viewStudentDetails" to="/dashboard/student-details" class="menu-item">
-        <span class="material-icons">groups</span>
-        <span v-if="isExpanded" class="text">Student Details</span>
-      </router-link>
+      <template v-if="authUserRole === 'manager'">
+        <router-link to="/dashboard/assign-quizzes" class="menu-item">
+          <span class="material-icons">quiz</span>
+          <span v-if="isExpanded" class="text">Assign Quizzes</span>
+        </router-link>
+        <router-link to="/dashboard/student-details" class="menu-item">
+          <span class="material-icons">groups</span>
+          <span v-if="isExpanded" class="text">Student Details</span>
+        </router-link>
+      </template>
 
       <!-- Student-specific options -->
-      <router-link v-if="authUserRole === 'student' && authUserPermissions.assignedQuizzes" to="/student/assigned-quizzes" class="menu-item">
-        <span class="material-icons">assignment</span>
-        <span v-if="isExpanded" class="text">Assigned Quizzes</span>
-      </router-link>
-      <router-link v-if="authUserRole === 'student' && authUserPermissions.quizResults" to="/student/quiz-results" class="menu-item">
-        <span class="material-icons">show_chart</span>
-        <span v-if="isExpanded" class="text">Quiz Results</span>
-      </router-link>
-
+      <template v-if="authUserRole === 'student'">
+        <router-link to="/student/assigned-quizzes" class="menu-item">
+          <span class="material-icons">assignment</span>
+          <span v-if="isExpanded" class="text">Assigned Quizzes</span>
+        </router-link>
+        <router-link to="/student/quiz-results" class="menu-item">
+          <span class="material-icons">show_chart</span>
+          <span v-if="isExpanded" class="text">Quiz Results</span>
+        </router-link>
+      </template>
     </nav>
 
     <div class="logout-container">
@@ -66,7 +68,7 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import ApiServices from '@/services/ApiServices';
 
 export default {
@@ -74,23 +76,17 @@ export default {
   data() {
     return {
       isExpanded: false,
-      authUserRole: '',
-      authUserPermissions: {}
     };
   },
-  created() {
-    this.loadUserData();
+  computed: {
+    ...mapGetters(['getUserRole']),
+    authUserRole() {
+      return this.getUserRole;
+    }
   },
   methods: {
     ...mapActions(['logoutUser']),
     
-    loadUserData() {
-      const authUser = JSON.parse(localStorage.getItem('authUser'));
-      if (authUser && authUser.data) {
-        this.authUserRole = authUser.data.roles[0];
-        this.authUserPermissions = authUser.data.permissions;
-      }
-    },
     toggleMenu() {
       this.isExpanded = !this.isExpanded;
     },
@@ -108,10 +104,7 @@ export default {
         });
 
         if (response.data && response.data.message === "Successfully logged out") {
-          // Call the logoutUser action from the store
           await this.logoutUser();
-          
-          // Redirect to login page
           this.$router.push('/login');
         } else {
           throw new Error('Logout failed');
@@ -124,7 +117,6 @@ export default {
   }
 };
 </script>
-
 
 <style scoped>
 /* Basic Variables */
