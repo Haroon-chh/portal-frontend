@@ -50,7 +50,6 @@
                 @validate="validatePhone"
                 required
               />
-              <label class="form-label">Phone Number</label>
             </div>
   
             <!-- CV Upload -->
