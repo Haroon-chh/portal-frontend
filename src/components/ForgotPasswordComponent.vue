@@ -143,5 +143,33 @@
   </script>
   
   <style scoped>
-  /* Custom styles can be added here if needed */
+  .bg-light {
+    background-image: url('../assets/educational_background.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+
+  .card {
+    border: none;
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .card-body {
+    padding: 2rem;
+  }
+
+  .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+  }
   </style>
