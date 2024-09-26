@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue'; 
 import RegistrationView from '../views/RegistrationView.vue'; 
 import DashboardView from '../views/DashboardView.vue'; 
+import SetPasswordView from '../views/SetPasswordView.vue';
 
 const routes = [
   {
@@ -26,10 +27,17 @@ const routes = [
     component: DashboardView,
     meta: { title: 'Dashboard', requiresAuth: true } // Auth required
   },
+  {
+    path: '/set-password',
+    name: 'SetPassword',
+    component: SetPasswordView,
+    meta: { title: 'Set Password', requiresAuth: false } // Auth required
+
+  },
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(process.env.BASE_URL),
   routes
 });
 

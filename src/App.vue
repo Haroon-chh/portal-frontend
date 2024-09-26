@@ -1,15 +1,18 @@
 <template>
-  <div v-if="!hideSidebar">
+  <div id="app">
+    <div v-if="!hideSidebar">
       <Sidebar />
     </div>
 
     <div :class="{ 'main-content': !hideSidebar }">
       <router-view></router-view>
     </div>
+  </div>
 </template>
 
 <script>
 import Sidebar from '@/components/SidebarComponent.vue';
+
 export default {
   name: 'App',
   components: {
@@ -17,13 +20,12 @@ export default {
   },
   computed: {
     hideSidebar() {
-      // Check the current route and hide sidebar on Login or Signup
+      // Check the current route and hide sidebar on Login, Signup, or SetPassword
       const routeName = this.$route.name;
-      return routeName === 'login' || routeName === 'registration';
+      return routeName === 'login' || routeName === 'registration' || routeName === 'SetPassword';
     },
   },
 };
-
 </script>
 
 <style lang="scss">
@@ -33,5 +35,10 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+}
+
+.main-content {
+  margin-left: 250px; // Adjust this value based on your sidebar width
+  padding: 20px;
 }
 </style>
