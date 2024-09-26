@@ -38,7 +38,6 @@ export default {
 }
 
 .main-content {
-  margin-left: 250px; // Adjust this value based on your sidebar width
   padding: 20px;
 }
 </style>
