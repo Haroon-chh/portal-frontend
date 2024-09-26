@@ -69,7 +69,6 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex';
-import ApiServices from '@/services/ApiServices';
 
 export default {
   name: 'SidebarComponent',
@@ -92,18 +91,18 @@ export default {
     },
     async logout() {
       try {
-        const token = localStorage.getItem('jwtToken');
+        const token = localStorage.getItem('access_token');
         if (!token) {
           throw new Error('No token found');
         }
 
-        const response = await ApiServices.PostRequest('/logout', {}, {
+        const response = await this.axios.post('http://192.168.15.156:8080/api/logout', {}, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.data && response.data.message === "Successfully logged out") {
+        if (response.data && response.data.data.message === "Successfully logged out") {
           await this.logoutUser();
           this.$router.push('/login');
         } else {
