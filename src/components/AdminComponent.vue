@@ -1,13 +1,19 @@
 <template>
-    <div>
-      <h2>Welcome Admin</h2>
-      <p>This is the admin dashboard view.</p>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'AdminComponent',
-  };
-  </script>
-  
+  <div>
+    <h2>Welcome Admin</h2>
+    <!-- Display ApplicationsComponent -->
+    <ApplicationsComponent />
+  </div>
+</template>
+
+<script>
+// Import ApplicationsComponent
+import ApplicationsComponent from './ApplicationsComponent.vue';
+
+export default {
+  name: 'AdminComponent',
+  components: {
+    ApplicationsComponent
+  }
+};
+</script>
