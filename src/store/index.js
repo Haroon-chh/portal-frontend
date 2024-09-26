@@ -20,7 +20,7 @@ export default createStore({
   actions: {
     loginUser({ commit }, userData) {
       // Store user data in localStorage
-      localStorage.setItem('jwtToken', userData.access_token);
+      localStorage.setItem('access_token', userData.access_token);
       localStorage.setItem('userRole', JSON.stringify(userData.data.roles));
       localStorage.setItem('userPermissions', JSON.stringify(userData.data.permissions));
       localStorage.setItem('authUser', JSON.stringify(userData));
@@ -30,7 +30,7 @@ export default createStore({
     },
     logoutUser({ commit }) {
       // Clear localStorage
-      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('access_token');
       localStorage.removeItem('userRole');
       localStorage.removeItem('userPermissions');
       localStorage.removeItem('authUser');
