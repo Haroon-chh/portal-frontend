@@ -64,17 +64,31 @@
         <span v-if="isExpanded">Logout</span>
       </button>
     </div>
+
+    <!-- Add these lines for the popup components -->
+    <SuccessPopup :show="showSuccessPopup" :message="successMessage" @close="showSuccessPopup = false" />
+    <ErrorPopup :show="showErrorPopup" :message="errorMessage" @close="showErrorPopup = false" />
   </aside>
 </template>
 
 <script>
 import { mapActions, mapGetters } from 'vuex';
+import SuccessPopup from '@/components/SuccessPopup.vue';
+import ErrorPopup from '@/components/ErrorPopup.vue';
 
 export default {
   name: 'SidebarComponent',
+  components: {
+    SuccessPopup,
+    ErrorPopup
+  },
   data() {
     return {
       isExpanded: false,
+      showSuccessPopup: false,
+      showErrorPopup: false,
+      successMessage: '',
+      errorMessage: ''
     };
   },
   computed: {
@@ -104,13 +118,18 @@ export default {
 
         if (response.data && response.data.data.message === "Successfully logged out") {
           await this.logoutUser();
-          this.$router.push('/login');
+          this.successMessage = 'Successfully logged out';
+          this.showSuccessPopup = true;
+          setTimeout(() => {
+            this.$router.push('/login');
+          }, 2000); // Redirect after 2 seconds
         } else {
           throw new Error('Logout failed');
         }
       } catch (error) {
         console.error('Error during logout:', error.message);
-        alert('An error occurred during logout. Please try again.');
+        this.errorMessage = 'An error occurred during logout. Please try again.';
+        this.showErrorPopup = true;
       }
     }
   }
