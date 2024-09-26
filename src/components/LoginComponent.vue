@@ -16,7 +16,7 @@
                 <label class="form-label" for="password">Password</label>
               </div>
               <div class="forgot-password mb-5">
-                <a href="#" class="text-white">Forgot password?</a>
+                <router-link to="/forgot-password" class="text-white">Forgot password?</router-link>
               </div>
               <div class="d-flex justify-content-center mb-3 mb-lg-4">
                 <button type="submit" class="btn btn-light btn-lg">

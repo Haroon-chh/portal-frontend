@@ -22,7 +22,7 @@ export default {
     hideSidebar() {
       // Check the current route and hide sidebar on Login, Signup, or SetPassword
       const routeName = this.$route.name;
-      return routeName === 'login' || routeName === 'registration' || routeName === 'SetPassword';
+      return routeName === 'login' || routeName === 'registration' || routeName === 'SetPassword' || routeName === 'ForgotPassword';
     },
   },
 };

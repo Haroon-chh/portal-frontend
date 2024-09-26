@@ -3,6 +3,7 @@ import LoginView from '../views/LoginView.vue';
 import RegistrationView from '../views/RegistrationView.vue'; 
 import DashboardView from '../views/DashboardView.vue'; 
 import SetPasswordView from '../views/SetPasswordView.vue';
+import ForgotPasswordView from '../views/ForgotPasswordView.vue';
 
 const routes = [
   {
@@ -32,6 +33,13 @@ const routes = [
     name: 'SetPassword',
     component: SetPasswordView,
     meta: { title: 'Set Password', requiresAuth: false } // Auth required
+
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPasswordView,
+    meta: { title: 'Forget Password', requiresAuth: false } // Auth required
 
   },
 ];
