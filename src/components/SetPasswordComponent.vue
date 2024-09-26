@@ -9,32 +9,40 @@
             Setting password for: {{ email }}
           </div>
   
-          <form @submit.prevent="setPassword">
-            <div class="mb-3">
-              <label for="password" class="form-label">New Password</label>
-              <input
-                type="password"
-                id="password"
-                v-model="password"
-                required
-                class="form-control"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="confirmPassword" class="form-label">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                v-model="confirmPassword"
-                required
-                class="form-control"
-              />
-            </div>
-            <button type="submit" class="btn btn-primary w-100" :disabled="isLoading">
-              <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              <span v-else>Set Password</span>
-            </button>
-          </form>
+          <!-- Token verification status -->
+          <div v-if="isTokenVerified">
+            <form @submit.prevent="setPassword">
+              <div class="mb-3">
+                <label for="password" class="form-label">New Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  v-model="password"
+                  required
+                  class="form-control"
+                />
+              </div>
+              <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  v-model="confirmPassword"
+                  required
+                  class="form-control"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary w-100" :disabled="isLoading">
+                <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span v-else>Set Password</span>
+              </button>
+            </form>
+          </div>
+  
+          <!-- Show error message if token is invalid -->
+          <div v-else-if="!isTokenVerified && tokenChecked" class="alert alert-danger text-center">
+            Invalid or expired token.
+          </div>
         </div>
       </div>
       <ErrorPopup :show="showError" :message="errorMessage" />
@@ -64,11 +72,52 @@
       const successMessage = ref('');
       const isLoading = ref(false);
       const email = ref(''); // Email extracted from URL
+      const isTokenVerified = ref(false); // Status of token verification
+      const tokenChecked = ref(false); // Flag to check if token verification is completed
   
       // Extract email and token from query params on component mount
-      onMounted(() => {
+      onMounted(async () => {
         email.value = route.query.email;
+        const token = route.query.token;
+  
+        if (!token || !email.value) {
+          errorMessage.value = 'Invalid or missing token or email';
+          showError.value = true;
+          return;
+        }
+  
+        // Call the verifyToken function to check token validity
+        await verifyToken(token, email.value);
       });
+  
+      const verifyToken = async (token, email) => {
+        try {
+          const response = await fetch('/verify-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              token,
+              email,
+            }),
+          });
+  
+          const data = await response.json();
+          tokenChecked.value = true;
+  
+          if (response.ok) {
+            isTokenVerified.value = true;
+          } else {
+            errorMessage.value = data.message || 'Invalid or expired token';
+            showError.value = true;
+          }
+        } catch (error) {
+          console.error('Error verifying token:', error);
+          errorMessage.value = 'An error occurred during token verification';
+          showError.value = true;
+        }
+      };
   
       const setPassword = async () => {
         showError.value = false;
@@ -84,21 +133,14 @@
   
         const token = route.query.token;
   
-        if (!token || !email.value) {
-          errorMessage.value = 'Invalid or missing token or email';
-          showError.value = true;
-          isLoading.value = false;
-          return;
-        }
-  
         try {
-          const response = await fetch('/set-password', {  //reset password will be name needs to be changed
+          const response = await fetch('/set-password', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              token: token,
+              token,
               email: email.value,
               password: password.value,
             }),
@@ -135,6 +177,8 @@
         successMessage,
         isLoading,
         email,
+        isTokenVerified,
+        tokenChecked,
       };
     },
   };

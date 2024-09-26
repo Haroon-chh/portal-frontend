@@ -49,8 +49,8 @@
 <script setup>
 import { ref, defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
-import { useStore } from 'vuex'; // If you're using Vuex for state management
-import ApiServices from '@/services/ApiServices'; // Import the ApiServices
+import { useStore } from 'vuex'; 
+import ApiServices from '@/services/ApiServices'; 
 import ErrorPopup from './ErrorPopup.vue';
 
 const ErrorPopupComponent = defineComponent(ErrorPopup);
@@ -58,7 +58,7 @@ const ErrorPopupComponent = defineComponent(ErrorPopup);
 const email = ref('');
 const password = ref('');
 const router = useRouter();
-const store = useStore(); // Vuex store
+const store = useStore(); 
 
 const showError = ref(false);
 const errorMessage = ref('');
@@ -70,11 +70,14 @@ const login = async () => {
       password: password.value
     });
 
-    if (response.data && response.data.message === "success") {
-      // Use the loginUser action from the store
-      await store.dispatch('loginUser', response.data);
+    // Log the full response for debugging
+    console.log('Login response:', response);
 
-      // Redirect to dashboard
+    if (response && response.message === "success" && response.data) {
+      // Dispatch the entire userData instead of individual properties
+      await store.dispatch('loginUser', response); // Pass the whole response object
+
+      // Redirect to the dashboard
       router.push('/dashboard');
     } else {
       throw new Error('Unexpected response format');
@@ -89,10 +92,13 @@ const login = async () => {
     showError.value = true;
     setTimeout(() => {
       showError.value = false;
-    }, 5000); // Hide the error after 5 seconds
+    }, 5000);
   }
 };
+
+
 </script>
+
 
 <style scoped>
 .login-body {

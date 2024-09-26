@@ -99,42 +99,47 @@ export default {
   },
   methods: {
     ...mapActions(['logoutUser']),
-    
+
     toggleMenu() {
       this.isExpanded = !this.isExpanded;
     },
     async logout() {
-      try {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-          throw new Error('No token found');
-        }
-
-        const response = await this.axios.post('http://192.168.15.156:8080/api/logout', {}, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (response.data && response.data.data.message === "Successfully logged out") {
-          await this.logoutUser();
-          this.successMessage = 'Successfully logged out';
-          this.showSuccessPopup = true;
-          setTimeout(() => {
-            this.$router.push('/login');
-          }, 2000); // Redirect after 2 seconds
-        } else {
-          throw new Error('Logout failed');
-        }
-      } catch (error) {
-        console.error('Error during logout:', error.message);
-        this.errorMessage = 'An error occurred during logout. Please try again.';
-        this.showErrorPopup = true;
-      }
+  try {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No token found');
     }
+
+    const response = await this.axios.post('http://192.168.15.156:8080/api/logout', {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    // Check the response's "message" field directly instead of data.message
+    if (response.data && response.data.message === "Successfully logged out") {
+      // Call the logoutUser action to clear Vuex state and local storage
+      await this.logoutUser();
+      this.successMessage = 'Successfully logged out';
+      this.showSuccessPopup = true;
+
+      setTimeout(() => {
+        this.$router.push('/login');
+      }, 2000); // Redirect after 2 seconds
+    } else {
+      throw new Error('Logout failed');
+    }
+  } catch (error) {
+    console.error('Error during logout:', error.message);
+    this.errorMessage = 'An error occurred during logout. Please try again.';
+    this.showErrorPopup = true;
+  }
+}
+
   }
 };
 </script>
+
 
 <style scoped>
 /* Basic Variables */

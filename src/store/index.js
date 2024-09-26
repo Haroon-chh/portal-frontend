@@ -6,7 +6,7 @@ export default createStore({
   },
   getters: {
     getUser: (state) => state.user,
-    getUserRole: (state) => state.user ? state.user.roles[0] : null,
+    getUserRole: (state) => state.user ? state.user.role : null,
     getUserPermissions: (state) => state.user ? state.user.permissions : [],
   },
   mutations: {
@@ -19,23 +19,25 @@ export default createStore({
   },
   actions: {
     loginUser({ commit }, userData) {
-      // Store user data in localStorage
-      localStorage.setItem('access_token', userData.access_token);
-      localStorage.setItem('userRole', JSON.stringify(userData.data.roles));
-      localStorage.setItem('userPermissions', JSON.stringify(userData.data.permissions));
+      // Store the entire response in localStorage as 'authUser'
       localStorage.setItem('authUser', JSON.stringify(userData));
+      
+      // Store the access token, role, and permissions separately
+      localStorage.setItem('access_token', userData.data.access_token);
+      localStorage.setItem('userRole', userData.data.role);
+      localStorage.setItem('userPermissions', JSON.stringify(userData.data.permissions));
 
-      // Commit the mutation with the user data
-      commit('setUser', userData.data);
+      // Commit the user data to the Vuex store
+      commit('setUser', userData.data);  // This sets the user state with the role and permissions
     },
     logoutUser({ commit }) {
       // Clear localStorage
       localStorage.removeItem('access_token');
       localStorage.removeItem('userRole');
       localStorage.removeItem('userPermissions');
-      localStorage.removeItem('authUser');
+      localStorage.removeItem('authUser'); // Clear authUser as well
 
-      // Clear the user in the store
+      // Clear user data in the Vuex store
       commit('clearUser');
     },
   },
