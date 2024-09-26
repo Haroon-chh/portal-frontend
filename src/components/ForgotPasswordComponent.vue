@@ -2,9 +2,13 @@
     <div class="container-fluid bg-light min-vh-100 d-flex align-items-center justify-content-center">
       <div class="card shadow-sm" style="max-width: 400px;">
         <div class="card-body p-4">
-          <h2 class="card-title text-center mb-4">{{ isEmailVerified ? 'Reset Password' : 'Forgot Password' }}</h2>
+          <h2 class="card-title text-center mb-4">Forgot Password</h2>
           
-          <form v-if="!isEmailVerified" @submit.prevent="verifyEmail">
+          <div v-if="emailFromUrl" class="alert alert-info mb-3">
+            Resetting password for: {{ emailFromUrl }}
+          </div>
+          
+          <form @submit.prevent="sendResetLink">
             <div class="mb-3">
               <label for="email" class="form-label">Email address</label>
               <input
@@ -13,44 +17,22 @@
                 v-model="email"
                 required
                 class="form-control"
+                :readonly="!!emailFromUrl"
               />
             </div>
-            <button type="submit" class="btn btn-primary w-100">Verify Email</button>
-          </form>
-  
-          <form v-else @submit.prevent="resetPassword">
-            <div class="mb-3">
-              <label for="password" class="form-label">New Password</label>
-              <input
-                type="password"
-                id="password"
-                v-model="password"
-                required
-                class="form-control"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="confirmPassword" class="form-label">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                v-model="confirmPassword"
-                required
-                class="form-control"
-              />
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Reset Password</button>
+            <button type="submit" class="btn btn-primary w-100">Send Reset Link</button>
           </form>
         </div>
       </div>
-      <ErrorPopup :show="showError" :message="errorMessage" />
-      <SuccessPopup :show="showSuccess" :message="successMessage" />
+      <!-- Error and Success Popups -->
+      <ErrorPopup :show="showError" :message="errorMessage" @close="showError = false" />
+      <SuccessPopup :show="showSuccess" :message="successMessage" @close="showSuccess = false" />
     </div>
   </template>
   
   <script>
-  import { ref } from 'vue';
-  import ApiService from '../services/ApiServices';
+  import { ref, inject, onMounted } from 'vue';
+  import { useRoute } from 'vue-router';
   import ErrorPopup from './ErrorPopup.vue';
   import SuccessPopup from './SuccessPopup.vue';
   
@@ -60,79 +42,56 @@
       SuccessPopup
     },
     setup() {
-      const email = ref('');
-      const password = ref('');
-      const confirmPassword = ref('');
-      const isEmailVerified = ref(false);
-      const showError = ref(false);
-      const errorMessage = ref('');
-      const showSuccess = ref(false);
-      const successMessage = ref('');
+      const axios = inject('axios');  // Axios injected for HTTP requests
+      const route = useRoute();
+      const email = ref('');  // Email input
+      const emailFromUrl = ref('');  // Email extracted from URL
+      const showError = ref(false);  // Controls visibility of error popup
+      const errorMessage = ref('');  // Holds error message content
+      const showSuccess = ref(false);  // Controls visibility of success popup
+      const successMessage = ref('');  // Holds success message content
   
-      const verifyEmail = async () => {
+      onMounted(() => {
+        // Extract email from URL parameters
+        const urlEmail = route.query.email;
+        if (urlEmail) {
+          emailFromUrl.value = decodeURIComponent(urlEmail);
+          email.value = emailFromUrl.value;
+        }
+      });
+
+      const sendResetLink = async () => {
+        // Reset visibility for error and success popups
         showError.value = false;
         showSuccess.value = false;
   
         try {
-          // This is where you'd call your API to verify the email
-          // For now, we'll just simulate a successful response
-          const response = await ApiService.PostRequest('/verify-email', { email: email.value });
+          // Make POST request to /forgot-password with email
+          const response = await axios.post('http://192.168.15.156:8080/api/forgot-password', { email: email.value });
           
-          if (response.status === 200) {
-            isEmailVerified.value = true;
-            successMessage.value = 'Email verified. Please set your new password.';
+          // Check if reset link was successfully sent
+          if (response.data && response.data.data && response.data.data.message === "Reset link sent successfully") {
+            successMessage.value = 'Reset link sent successfully. Please check your email.';
             showSuccess.value = true;
           } else {
-            errorMessage.value = 'Email verification failed. Please try again.';
-            showError.value = true;
+            throw new Error('Unexpected response from server');
           }
         } catch (error) {
+          // Handle error if validation error or other issue occurs
           console.error('Error occurred', error);
-          errorMessage.value = 'An error occurred while verifying the email.';
-          showError.value = true;
-        }
-      };
-  
-      const resetPassword = async () => {
-        showError.value = false;
-        showSuccess.value = false;
-  
-        if (password.value !== confirmPassword.value) {
-          errorMessage.value = 'Passwords do not match';
-          showError.value = true;
-          return;
-        }
-  
-        try {
-          // This is where you'd call your API to reset the password
-          // For now, we'll just simulate a successful response
-          const response = await ApiService.PostRequest('/reset-password', {
-            email: email.value,
-            password: password.value
-          });
-  
-          if (response.status === 200) {
-            successMessage.value = 'Password reset successfully';
-            showSuccess.value = true;
-            // You might want to redirect to login page after a short delay
+          if (error.response && error.response.data && error.response.data['validation errors']) {
+            errorMessage.value = error.response.data['validation errors'].email[0];
           } else {
-            errorMessage.value = 'Password reset failed. Please try again.';
-            showError.value = true;
+            errorMessage.value = 'An error occurred while sending the reset link. Please try again.';
           }
-        } catch (error) {
-          console.error('Error occurred', error);
-          errorMessage.value = 'An error occurred while resetting the password.';
           showError.value = true;
         }
       };
   
       return {
         email,
-        password,
-        confirmPassword,
-        isEmailVerified,
-        verifyEmail,
-        resetPassword,
+        emailFromUrl,
+        sendResetLink,
         showError,
         errorMessage,
         showSuccess,
@@ -148,26 +107,26 @@
     background-size: cover;
     background-position: center;
   }
-
+  
   .card {
     border: none;
     background-color: rgba(255, 255, 255, 0.8);
   }
-
+  
   .card-body {
     padding: 2rem;
   }
-
+  
   .form-control:focus {
     border-color: #80bdff;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
   }
-
+  
   .btn-primary {
     background-color: #007bff;
     border-color: #007bff;
   }
-
+  
   .btn-primary:hover {
     background-color: #0056b3;
     border-color: #0056b3;

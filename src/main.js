@@ -13,6 +13,7 @@ import 'bootstrap-vue-3/dist/bootstrap-vue-3.css'; // Import BootstrapVue 3 CSS
 
 // Create the app instance
 const app = createApp(App);
+app.provide('axios', axios);
 
 // Use store, router, VueAxios, and BootstrapVue 3
 app.use(store)

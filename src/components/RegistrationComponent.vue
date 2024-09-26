@@ -4,9 +4,6 @@
       <div class="col-lg-12 form-container d-flex flex-column justify-content-center">
         <div class="card-body p-4">
           <p class="text-center h2 fw-semibold mb-4 mx-1 mx-md-4 mt-2">Register Form</p>
-          <div v-if="errorMessage" class="error-message">
-            {{ errorMessage }}
-          </div>
           <form class="mx-1 mx-md-4" @submit.prevent="register">
             <!-- First Name and Last Name Fields -->
             <div class="d-flex flex-row align-items-center mt-5 mb-4 pb-2 form-outline">
@@ -70,83 +67,51 @@
         </div>
       </div>
     </div>
+    <ErrorPopup :show="showError" :message="errorMessage" />
+    <SuccessPopup :show="showSuccess" :message="successMessage" />
   </div>
 </template>
 
 <script>
 import { ref } from 'vue';
-import ApiService from '../services/ApiServices';
+import { useRouter } from 'vue-router';
+import ApiService from '@/services/ApiServices';
 
 export default {
   setup() {
-    const firstName = ref('');
-    const lastName = ref('');
+    const router = useRouter();
+    const name = ref('');
     const email = ref('');
-    const phone = ref('');
-    const cvFile = ref(null);
+    const password = ref('');
     const errorMessage = ref('');
 
-    const handleFileUpload = (event) => {
-      cvFile.value = event.target.files[0];
-    };
-
     const register = async () => {
-      errorMessage.value = '';
-
-      if (!firstName.value || !lastName.value || !email.value || !phone.value || !cvFile.value) {
-        errorMessage.value = 'All fields are required, including a valid phone number and CV upload.';
-        return;
-      }
-
-      const name = `${firstName.value} ${lastName.value}`;
-
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('email', email.value);
-      formData.append('phone', phone.value);
-      formData.append('attachment', cvFile.value);
-
       try {
-        const response = await ApiService.PostRequest('/apply', formData);
+        const response = await ApiService.post('/register', {
+          name: name.value,
+          email: email.value,
+          password: password.value
+        });
 
-        if (response.status === 200) {
-          errorMessage.value = 'Registration successful: ' + response.message;
-          // Clear form fields after successful submission
-          firstName.value = '';
-          lastName.value = '';
-          email.value = '';
-          phone.value = '';
-          cvFile.value = null;
+        if (response.data.message === 'User registered successfully') {
+          router.push('/login');
         } else {
-          errorMessage.value = 'Unexpected response: ' + response.message;
+          errorMessage.value = 'Registration failed. Please try again.';
         }
       } catch (error) {
-        console.error('Error occurred', error);
-        if (error.response && error.response.data) {
-          if (error.response.data.validator) {
-            const validatorErrors = error.response.data.validator;
-            errorMessage.value = Object.values(validatorErrors).flat().join(' ');
-          } else if (error.response.data.message) {
-            errorMessage.value = error.response.data.message;
-          } else {
-            errorMessage.value = 'An unexpected error occurred during registration.';
-          }
-        } else {
-          errorMessage.value = 'Error during registration: ' + (error.message || 'Unknown error');
-        }
+        console.error('Registration error:', error);
+        errorMessage.value = error.response?.data?.message || 'An error occurred during registration.';
       }
     };
 
     return {
-      firstName,
-      lastName,
+      name,
       email,
-      phone,
-      handleFileUpload,
+      password,
       register,
-      errorMessage,
+      errorMessage
     };
-  },
+  }
 };
 </script>
 
