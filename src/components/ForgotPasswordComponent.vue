@@ -70,7 +70,7 @@
           const response = await axios.post('http://192.168.15.156:8080/api/forgot-password', { email: email.value });
           
           // Check if reset link was successfully sent
-          if (response.data && response.data.data && response.data.data.message === "Reset link sent successfully") {
+          if (response.data && response.data.message === "Reset link sent successfully") {
             successMessage.value = 'Reset link sent successfully. Please check your email.';
             showSuccess.value = true;
           } else {
@@ -79,8 +79,8 @@
         } catch (error) {
           // Handle error if validation error or other issue occurs
           console.error('Error occurred', error);
-          if (error.response && error.response.data && error.response.data['validation errors']) {
-            errorMessage.value = error.response.data['validation errors'].email[0];
+          if (error.response && error.response.data && error.response.data.message) {
+            errorMessage.value = error.response.data.message;
           } else {
             errorMessage.value = 'An error occurred while sending the reset link. Please try again.';
           }

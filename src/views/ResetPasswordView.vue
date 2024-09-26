@@ -1,15 +1,15 @@
 <template>
     <div class="set-password-view">
-      <SetPasswordComponent />
+      <ResetPasswordComponent />
     </div>
   </template>
   
   <script>
-  import SetPasswordComponent from '@/components/SetPasswordComponent.vue';
+  import ResetPasswordComponent from '@/components/ResetPasswordComponent.vue';
   
   export default {
     components: {
-      SetPasswordComponent
+      ResetPasswordComponent
     }
   };
   </script>

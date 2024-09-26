@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue'; 
 import RegistrationView from '../views/RegistrationView.vue'; 
 import DashboardView from '../views/DashboardView.vue'; 
-import SetPasswordView from '../views/SetPasswordView.vue';
+import ResetPasswordView from '../views/ResetPasswordView.vue';
 import ForgotPasswordView from '../views/ForgotPasswordView.vue';
 
 const routes = [
@@ -29,10 +29,10 @@ const routes = [
     meta: { title: 'Dashboard', requiresAuth: true } // Auth required
   },
   {
-    path: '/set-password',
-    name: 'SetPassword',
-    component: SetPasswordView,
-    meta: { title: 'Set Password', requiresAuth: false } // Auth required
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: ResetPasswordView,
+    meta: { title: 'Reset Password', requiresAuth: false } // Auth required
 
   },
   {

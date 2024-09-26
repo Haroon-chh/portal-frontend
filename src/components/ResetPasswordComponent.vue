@@ -92,7 +92,7 @@
   
       const verifyToken = async (token, email) => {
         try {
-          const response = await fetch('/verify-token', {
+          const response = await fetch('http://192.168.15.156:8080/api/verify-token', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -134,7 +134,7 @@
         const token = route.query.token;
   
         try {
-          const response = await fetch('/set-password', {
+          const response = await fetch('http://192.168.15.156:8080/api/reset-password', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -143,6 +143,7 @@
               token,
               email: email.value,
               password: password.value,
+              password_confirmation: confirmPassword.value,
             }),
           });
   
@@ -197,4 +198,3 @@
     background-color: rgba(255, 255, 255, 0.8);
   }
   </style>
-  
