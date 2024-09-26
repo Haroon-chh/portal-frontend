@@ -1,29 +1,33 @@
 <template>
-    <div class="set-password-container">
-      <h2>Set Your Password</h2>
-      <form @submit.prevent="setPassword">
-        <div class="form-group">
-          <label for="password">New Password</label>
-          <input
-            type="password"
-            id="password"
-            v-model="password"
-            required
-            class="form-control"
-          />
+    <div class="container-fluid bg-light min-vh-100 d-flex align-items-center justify-content-center">
+      <div class="card shadow-sm" >
+        <div class="card-body p-4">
+          <h2 class="card-title text-center mb-4">Set Your Password</h2>
+          <form @submit.prevent="setPassword">
+            <div class="mb-3">
+              <label for="password" class="form-label">New Password</label>
+              <input
+                type="password"
+                id="password"
+                v-model="password"
+                required
+                class="form-control"
+              />
+            </div>
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">Confirm Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                v-model="confirmPassword"
+                required
+                class="form-control"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Set Password</button>
+          </form>
         </div>
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            v-model="confirmPassword"
-            required
-            class="form-control"
-          />
-        </div>
-        <button type="submit" class="btn btn-primary">Set Password</button>
-      </form>
+      </div>
       <ErrorPopup :show="showError" :message="errorMessage" />
       <SuccessPopup :show="showSuccess" :message="successMessage" />
     </div>
@@ -111,34 +115,16 @@
   </script>
   
   <style scoped>
-  .set-password-container {
+  .bg-light {
+    background-image: url(../assets/educational_background.jpg);
+    background-size: cover;
+    background-position: center;
+  }
+
+  .card {
+    width: 100%;
     max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  
-  .form-group {
-    margin-bottom: 15px;
-  }
-  
-  .form-control {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .btn-primary {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .btn-primary:hover {
-    background-color: #0056b3;
+    background-color: rgba(255, 255, 255, 0.8);
+
   }
   </style>
