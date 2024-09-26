@@ -92,7 +92,7 @@
         }
   
         try {
-          const response = await fetch('/set-password', {
+          const response = await fetch('/set-password', {  //reset password will be name needs to be changed
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
