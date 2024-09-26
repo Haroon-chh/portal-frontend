@@ -1,19 +1,19 @@
 import Store from "../app/store/index";
 
-let RouteService = function routeGuard(permission, to) {
-  if (Store.state.Auth.token) {
-    if (Store.state.Auth.permissions.includes(permission)) {
-      // write logic here 
-      // // Store.commit("setCurrentPath", {
-      // //   currentPath: to.name,
-      // });
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return "/signin";
+const RouteGuard = (to, from, next) => {
+  const publicPages = ['/login', '/registration', '/forgot-password', '/set-password'];
+  const authRequired = !publicPages.includes(to.path);
+  const loggedIn = Store.state.Auth.token;
+
+  if (authRequired && !loggedIn) {
+    return next('/login');
   }
+
+  if (loggedIn && publicPages.includes(to.path)) {
+    return next('/dashboard');
+  }
+
+  next();
 };
 
-export default RouteService;
+export default RouteGuard;
