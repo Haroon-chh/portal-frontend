@@ -92,75 +92,78 @@ export default {
     },
   },
   mounted() {
-    this.fetchApplications(`${process.env.VUE_APP_API_URL}/applications`);
+    this.fetchApplications();
   },
   methods: {
     // Fetch applications from the API
-    async fetchApplications(url) {
-  try {
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      console.error('No access token found');
-      return;
-    }
+    async fetchApplications(url = null) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          console.error('No access token found');
+          return;
+        }
 
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true', // remove this when not using ngrok
-      },
-    });
+        const apiUrl = url || `${process.env.VUE_APP_API_URL}/applications`;
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
-    }
+        const response = await fetch(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true', // remove this when not using ngrok
+          },
+        });
 
-    const data = await response.json();
-    this.applications = Array.isArray(data.data.data) ? data.data.data : [];
-    this.pagination = data.data;
-  } catch (error) {
-    this.errorMessage = `Error fetching applications: ${error.message}`;
-    console.error('Error:', error);
-  }
-}
-,
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
+        }
+
+        const data = await response.json();
+        this.applications = Array.isArray(data.data.data) ? data.data.data : [];
+        this.pagination = data.data;
+      } catch (error) {
+        this.errorMessage = `Error fetching applications: ${error.message}`;
+        console.error('Error:', error);
+      }
+    },
 
     // Accept application and handle response with SuccessPop and ErrorPopup
     async acceptApplication(applicationId) {
-  try {
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      console.error('No access token found');
-      return;
-    }
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          console.error('No access token found');
+          return;
+        }
 
-    const response = await fetch(`${process.env.VUE_APP_API_URL}/accept-application/${applicationId}`, {
-      method: 'POST', // Changed to POST
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
+        const response = await fetch(`${process.env.VUE_APP_API_URL}/accept-application/${applicationId}`, {
+          method: 'POST', // Changed to POST
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
-    }
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
+        }
 
-    const data = await response.json();
-    this.successMessage = data.message;
-    this.showSuccessPopup = true;
-    
-    // Refresh the applications list after successful acceptance
-    await this.fetchApplications();
-  } catch (error) {
-    this.errorMessage = `Error accepting application: ${error.message}`;
-    console.error('Error:', error);
-  }
-}
-,
+        const data = await response.json();
+        this.successMessage = data.message;
+        this.showSuccessPopup = true;
+        
+        // Update the local state instead of refetching
+        const index = this.applications.findIndex(app => app.id === applicationId);
+        if (index !== -1) {
+          this.applications[index].accepted = 1;
+        }
+      } catch (error) {
+        this.errorMessage = `Error accepting application: ${error.message}`;
+        console.error('Error:', error);
+      }
+    },
 
     clearErrorMessage() {
       this.errorMessage = '';
