@@ -4,6 +4,7 @@ import RegistrationView from '../views/RegistrationView.vue';
 import DashboardView from '../views/DashboardView.vue'; 
 import ResetPasswordView from '../views/ResetPasswordView.vue';
 import ForgotPasswordView from '../views/ForgotPasswordView.vue';
+import StudentResultView from '../views/StudentResultView.vue';
 
 const routes = [
   {
@@ -41,6 +42,12 @@ const routes = [
     component: ForgotPasswordView,
     meta: { title: 'Forget Password', requiresAuth: false } // Auth required
 
+  },
+  {
+    path: '/view-results',
+    name: 'StudentResult',
+    component: StudentResultView,
+    meta: { title: 'Student Result', requiresAuth: true } // Auth required
   },
 ];
 

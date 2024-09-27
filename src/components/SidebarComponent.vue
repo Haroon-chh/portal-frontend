@@ -23,7 +23,7 @@
           <span class="material-icons">assignment_ind</span>
           <span v-if="isExpanded" class="text">Assign Roles</span>
         </router-link>
-        <router-link to="/dashboard/view-results" class="menu-item">
+        <router-link to="/view-results" class="menu-item">
           <span class="material-icons">bar_chart</span>
           <span v-if="isExpanded" class="text">View Results</span>
         </router-link>
