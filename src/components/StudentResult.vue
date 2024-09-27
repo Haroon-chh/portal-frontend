@@ -87,7 +87,7 @@
       },
     },
     mounted() {
-      this.fetchStudents('https://28f0-139-135-54-19.ngrok-free.app/api/students');
+      this.fetchStudents(`${process.env.VUE_APP_API_URL}/students`);
     },
     methods: {
       // Fetch students from the API
@@ -103,6 +103,7 @@
             headers: {
               Authorization: `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': 'true', // Skip the warning header
             },
           });
   

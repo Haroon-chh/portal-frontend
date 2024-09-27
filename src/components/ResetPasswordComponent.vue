@@ -92,7 +92,7 @@
   
       const verifyToken = async (token, email) => {
         try {
-          const response = await fetch('https://28f0-139-135-54-19.ngrok-free.app/api/verify-token', {
+          const response = await fetch(`${process.env.VUE_APP_API_URL}/verify-token`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -134,7 +134,7 @@
         const token = route.query.token;
   
         try {
-          const response = await fetch('https://28f0-139-135-54-19.ngrok-free.app/api/reset-password', {
+          const response = await fetch(`${process.env.VUE_APP_API_URL}/reset-password`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

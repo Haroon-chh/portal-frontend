@@ -117,7 +117,7 @@ export default {
       formData.append('attachment', attachment.value);
 
       try {
-        const response = await fetch('https://28f0-139-135-54-19.ngrok-free.app/api/apply', {
+        const response = await fetch(`${process.env.VUE_APP_API_URL}/apply`, {
           method: 'POST',
           body: formData,
         });

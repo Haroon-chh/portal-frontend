@@ -110,7 +110,7 @@ export default {
       throw new Error('No token found');
     }
 
-    const response = await this.axios.post('https://28f0-139-135-54-19.ngrok-free.app/api/logout', {}, {
+    const response = await this.axios.post(`${process.env.VUE_APP_API_URL}/logout`, {}, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

@@ -92,7 +92,7 @@ export default {
     },
   },
   mounted() {
-    this.fetchApplications('https://28f0-139-135-54-19.ngrok-free.app/api/applications');
+    this.fetchApplications(`${process.env.VUE_APP_API_URL}/applications`);
   },
   methods: {
     // Fetch applications from the API
@@ -136,7 +136,7 @@ export default {
       return;
     }
 
-    const response = await fetch(`https://28f0-139-135-54-19.ngrok-free.app/api/accept-application/${applicationId}`, {
+    const response = await fetch(`${process.env.VUE_APP_API_URL}${applicationId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
