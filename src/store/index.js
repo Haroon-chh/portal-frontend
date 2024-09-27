@@ -2,13 +2,13 @@ import { createStore } from 'vuex';
 
 export default createStore({
   state: {
-    user: null,
-    loggedUser: null,
+    user: JSON.parse(localStorage.getItem('authUser')) || null,
+    loggedUser: JSON.parse(localStorage.getItem('logged_user')) || null,
   },
   getters: {
     getUser: (state) => state.user,
-    getUserRole: (state) => state.user ? state.user.role : null,
-    getUserPermissions: (state) => state.user ? state.user.permissions : [],
+    getUserRole: (state) => state.user ? state.user.role : localStorage.getItem('userRole'),
+    getUserPermissions: (state) => state.user ? state.user.permissions : JSON.parse(localStorage.getItem('userPermissions') || '[]'),
     getLoggedUser: (state) => state.loggedUser,
   },
   mutations: {
@@ -25,7 +25,7 @@ export default createStore({
   },
   actions: {
     loginUser({ commit }, userData) {
-      localStorage.setItem('authUser', JSON.stringify(userData));
+      localStorage.setItem('authUser', JSON.stringify(userData.data));
       localStorage.setItem('access_token', userData.data.access_token);
       localStorage.setItem('userRole', userData.data.role);
       localStorage.setItem('userPermissions', JSON.stringify(userData.data.permissions));
@@ -42,6 +42,16 @@ export default createStore({
     setLoggedUserData({ commit }, loggedUserData) {
       localStorage.setItem('logged_user', JSON.stringify(loggedUserData));
       commit('setLoggedUser', loggedUserData);
+    },
+    initializeStore({ commit }) {
+      const authUser = JSON.parse(localStorage.getItem('authUser'));
+      if (authUser) {
+        commit('setUser', authUser);
+      }
+      const loggedUser = JSON.parse(localStorage.getItem('logged_user'));
+      if (loggedUser) {
+        commit('setLoggedUser', loggedUser);
+      }
     },
   },
 });
