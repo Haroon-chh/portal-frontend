@@ -136,7 +136,7 @@ export default {
           return;
         }
 
-        const response = await fetch(`https://28f0-139-135-54-19.ngrok-free.app/api/applications//accept-application/${applicationId}`, {
+        const response = await fetch(`https://28f0-139-135-54-19.ngrok-free.app/api/accept-application/${applicationId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
