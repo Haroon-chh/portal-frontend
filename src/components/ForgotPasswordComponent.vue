@@ -67,7 +67,7 @@
   
         try {
           // Make POST request to /forgot-password with email
-          const response = await axios.post('http://192.168.15.156:8080/api/forgot-password', { email: email.value });
+          const response = await axios.post('https://28f0-139-135-54-19.ngrok-free.app/api/forgot-password', { email: email.value });
           
           // Check if reset link was successfully sent
           if (response.data && response.data.message === "Reset link sent successfully") {

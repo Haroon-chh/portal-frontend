@@ -29,7 +29,7 @@ export default {
           return;
         }
 
-        const response = await fetch('http://192.168.15.156:8080/api/profile', {
+        const response = await fetch('https://28f0-139-135-54-19.ngrok-free.app/api/profile', {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',

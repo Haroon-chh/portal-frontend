@@ -87,7 +87,7 @@
       },
     },
     mounted() {
-      this.fetchStudents('http://192.168.15.156:8080/api/students');
+      this.fetchStudents('https://28f0-139-135-54-19.ngrok-free.app/api/students');
     },
     methods: {
       // Fetch students from the API

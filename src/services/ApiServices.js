@@ -2,7 +2,7 @@ import Vue from 'vue';
 import axios from "axios";
 import VueAxios from "vue-axios";
 
-const baseURL = 'http://192.168.15.156:8080/api';
+const baseURL = 'https://28f0-139-135-54-19.ngrok-free.app/api';
 
 const ApiServices = {
   init() {

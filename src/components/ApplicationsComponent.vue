@@ -92,7 +92,7 @@ export default {
     },
   },
   mounted() {
-    this.fetchApplications('http://192.168.15.156:8080/api/applications');
+    this.fetchApplications('https://28f0-139-135-54-19.ngrok-free.app/api/applications');
   },
   methods: {
     // Fetch applications from the API
@@ -117,8 +117,10 @@ export default {
         }
 
         const data = await response.json();
-        this.applications = data.data;
-        this.pagination = data;
+        
+        // Correctly reference the applications array inside the data object
+        this.applications = Array.isArray(data.data.data) ? data.data.data : [];
+        this.pagination = data.data; // Set pagination details
       } catch (error) {
         this.errorMessage = `Error fetching applications: ${error.message}`;
         console.error('Error:', error);
@@ -130,41 +132,28 @@ export default {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
-          this.errorMessage = 'No access token found. Please log in again.';
+          console.error('No access token found');
           return;
         }
 
-        const response = await fetch(`http://192.168.15.156:8080/api/accept-application/${applicationId}`, {
-          method: 'POST',
+        const response = await fetch(`https://28f0-139-135-54-19.ngrok-free.app/api/applications//accept-application/${applicationId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
         });
 
-        const responseData = await response.json();
-
         if (!response.ok) {
-          throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+          const errorBody = await response.text();
+          throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
         }
 
-        // Set success message from the response and show the popup
-        this.successMessage = responseData.message || 'Application accepted successfully';
+        const data = await response.json();
+        this.successMessage = data.message;
         this.showSuccessPopup = true;
-
-        // Update the accepted status of the application in local state
-        this.applications = this.applications.map((app) =>
-          app.id === applicationId ? { ...app, accepted: 1 } : app
-        );
-
-        // Refresh the applications list after a short delay
-        setTimeout(async () => {
-          await this.fetchApplications('http://192.168.15.156:8080/api/applications');
-          this.showSuccessPopup = false;
-        }, 2000); // Hide popup and refresh after 2 seconds
       } catch (error) {
         this.errorMessage = `Error accepting application: ${error.message}`;
-        console.error('Error accepting application:', error);
+        console.error('Error:', error);
       }
     },
 
