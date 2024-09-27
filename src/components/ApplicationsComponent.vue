@@ -136,11 +136,11 @@ export default {
       return;
     }
 
-    const response = await fetch(`${process.env.VUE_APP_API_URL}${applicationId}`, {
+    const response = await fetch(`${process.env.VUE_APP_API_URL}/accept-application/${applicationId}`, {
+      method: 'POST', // Changed to POST
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true', // Skip the warning header
       },
     });
 
@@ -152,6 +152,9 @@ export default {
     const data = await response.json();
     this.successMessage = data.message;
     this.showSuccessPopup = true;
+    
+    // Refresh the applications list after successful acceptance
+    await this.fetchApplications();
   } catch (error) {
     this.errorMessage = `Error accepting application: ${error.message}`;
     console.error('Error:', error);
