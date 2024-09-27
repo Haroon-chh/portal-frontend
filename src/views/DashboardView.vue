@@ -1,6 +1,6 @@
 <template>
   <div class="header">     
-    <Header title="Welcome to Dashboard" />
+    <Header title="Dashboard" />
   </div>
   <div>
     <component :is="getComponentByRole()" />
