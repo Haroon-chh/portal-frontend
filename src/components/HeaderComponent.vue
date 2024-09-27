@@ -35,7 +35,7 @@
     top: 0;
     overflow: hidden;
     padding: 5px;
-    z-index: 2;
+    z-index: 10;
   }
 
   .header-content {
@@ -74,6 +74,9 @@
     .profile-component {
       margin-left: 0;
       margin-top: 10px;
+      position: absolute;
+      right: 5%;
+      overflow: visible;
     }
   }
   </style>

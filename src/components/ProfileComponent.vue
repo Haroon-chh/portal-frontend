@@ -1,90 +1,130 @@
 <template>
-    <div class="dropdown">
-      <button class="btn btn-secondary dropdown-toggle profile-circle rounded-5" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        {{ userInitials }}
-      </button>
-      <ul class="dropdown-menu" aria-labelledby="profileDropdown">
-        <li><a class="dropdown-item" href="#" @click.prevent="goToProfile">Profile</a></li>
-        <li><a class="dropdown-item" href="#" @click.prevent="goToChangePassword">Change Password</a></li>
-      </ul>
+  <div class="profile-container">
+    <button @click="toggleDropdown" class="profile-circle" type="button" id="profileDropdown">
+      {{ userInitials }}
+    </button>
+    <div v-if="isDropdownOpen" class="profile-dropdown">
+      <a href="#" @click.prevent="goToProfile">Profile</a>
+      <a href="#" @click.prevent="goToChangePassword">Change Password</a>
     </div>
-  </template>
-  
-  <script>
-  import { computed, onMounted } from 'vue';
-  import { useStore } from 'vuex';
-  import { useRouter } from 'vue-router';
-  
-  export default {
-    setup() {
-      const store = useStore();
-      const router = useRouter();
-  
-      const fetchUserProfile = async () => {
-        try {
-          const accessToken = localStorage.getItem('access_token');
-          if (!accessToken) {
-            console.error('No access token found');
-            return;
-          }
-  
-          const response = await fetch('http://192.168.15.156:8080/api/profile', {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            }
-          });
-  
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-  
-          const data = await response.json();
-          if (data.message === 'success') {
-            store.dispatch('setLoggedUserData', data.data);
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
+  </div>
+</template>
+
+<script>
+import { ref, computed, onMounted } from 'vue';
+import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
+
+export default {
+  setup() {
+    const store = useStore();
+    const router = useRouter();
+    const isDropdownOpen = ref(false);
+
+    const fetchUserProfile = async () => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          console.error('No access token found');
+          return;
         }
-      };
-  
-      onMounted(fetchUserProfile);
-  
-      const userInitials = computed(() => {
-        const loggedUser = store.getters.getLoggedUser;
-        if (loggedUser && loggedUser.name) {
-          return loggedUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+        const response = await fetch('http://192.168.15.156:8080/api/profile', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return '';
-      });
-  
-      const goToProfile = () => {
-        router.push('/profile');
-      };
-  
-      const goToChangePassword = () => {
-        router.push('/change-password');
-      };
-  
-      return {
-        userInitials,
-        goToProfile,
-        goToChangePassword,
-      };
-    }
-  };
-  </script>
-  
-  <style scoped>
-  .profile-circle {
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    background-color: white;
-    color: black;
-    border: none;
+
+        const data = await response.json();
+        if (data.message === 'success') {
+          store.dispatch('setLoggedUserData', data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    onMounted(fetchUserProfile);
+
+    const userInitials = computed(() => {
+      const loggedUser = store.getters.getLoggedUser;
+      if (loggedUser && loggedUser.name) {
+        return loggedUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      }
+      return '';
+    });
+
+    const toggleDropdown = () => {
+      isDropdownOpen.value = !isDropdownOpen.value;
+    };
+
+    const goToProfile = () => {
+      router.push('/profile');
+      isDropdownOpen.value = false;
+    };
+
+    const goToChangePassword = () => {
+      router.push('/change-password');
+      isDropdownOpen.value = false;
+    };
+
+    return {
+      userInitials,
+      isDropdownOpen,
+      toggleDropdown,
+      goToProfile,
+      goToChangePassword,
+    };
   }
-  </style>
+};
+</script>
+
+<style scoped>
+.profile-container {
+  position: relative;
+  margin-right: 20px; /* Adjust as needed */
+}
+
+.profile-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  background-color: white;
+  color: black;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.profile-dropdown {
+  position: fixed; /* Changed from absolute to fixed */
+  top: 10%; /* Adjust this value to match your header height */
+  right: 1%; /* Align with the right side of the profile circle */
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 8px 0;
+  min-width: 150px;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.profile-dropdown a {
+  display: block;
+  padding: 8px 16px;
+  color: #333;
+  text-decoration: none;
+}
+
+.profile-dropdown a:hover {
+  background-color: #f8f9fa;
+}
+</style>
