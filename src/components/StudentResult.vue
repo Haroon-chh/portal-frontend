@@ -87,7 +87,8 @@
       },
     },
     mounted() {
-      this.fetchStudents(`${process.env.VUE_APP_API_URL}/students`);
+      const apiUrl = process.env.VUE_APP_API_URL ;
+      this.fetchStudents(`${apiUrl}/students`);
     },
     methods: {
       // Fetch students from the API
@@ -112,9 +113,16 @@
             throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
           }
   
-          const data = await response.json();
-          this.students = data.data;
-          this.pagination = data;
+          const responseData = await response.json();
+          
+          // Update this part to match the response structure
+          if (responseData.data && responseData.data.data) {
+            this.students = responseData.data.data;
+            this.pagination = responseData.data;
+          } else {
+            console.error('Unexpected response structure:', responseData);
+            this.errorMessage = 'Unexpected data structure received from the server.';
+          }
         } catch (error) {
           this.errorMessage = `Error fetching students: ${error.message}`;
           console.error('Error:', error);
@@ -157,4 +165,3 @@
     margin-bottom: 10px;
   }
   </style>
-  
