@@ -57,8 +57,8 @@
       </nav>
   
       <!-- Popup Components for Success and Error Messages -->
-      <ErrorPopup v-if="errorMessage" :message="errorMessage" @close="errorMessage = ''" />
-      <SuccessPop v-if="successMessage" :message="successMessage" @close="successMessage = ''" />
+      <ErrorPopup v-if="errorMessage" :message="errorMessage" @close="clearErrorMessage" />
+      <SuccessPop v-if="showSuccessPopup" :message="successMessage" @close="clearSuccessMessage" />
     </div>
   </template>
   
@@ -78,6 +78,7 @@
         pagination: {},
         errorMessage: '', // Holds error message for ErrorPopup
         successMessage: '', // Holds success message for SuccessPop
+        showSuccessPopup: false,
       };
     },
     computed: {
@@ -124,7 +125,7 @@
         try {
           const accessToken = localStorage.getItem('access_token');
           if (!accessToken) {
-            console.error('No access token found');
+            this.errorMessage = 'No access token found. Please log in again.';
             return;
           }
   
@@ -136,22 +137,38 @@
             },
           });
   
+          const responseData = await response.json();
+  
           if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
+            throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
           }
   
-          const responseData = await response.json();
-          this.successMessage = responseData.message;
+          // Set success message from the response and show the popup
+          this.successMessage = responseData.message || 'Application accepted successfully';
+          this.showSuccessPopup = true;
   
           // Update the accepted status of the application in local state
           this.applications = this.applications.map((app) =>
             app.id === applicationId ? { ...app, accepted: 1 } : app
           );
+  
+          // Refresh the applications list after a short delay
+          setTimeout(async () => {
+            await this.fetchApplications('http://192.168.15.156:8080/api/applications');
+            this.showSuccessPopup = false;
+          }, 2000); // Hide popup and refresh after 2 seconds
         } catch (error) {
           this.errorMessage = `Error accepting application: ${error.message}`;
           console.error('Error accepting application:', error);
         }
+      },
+  
+      clearErrorMessage() {
+        this.errorMessage = '';
+      },
+  
+      clearSuccessMessage() {
+        this.showSuccessPopup = false;
       },
     },
   };
@@ -160,4 +177,3 @@
   <style scoped>
   /* Additional styling remains unchanged */
   </style>
-  
