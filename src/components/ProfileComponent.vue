@@ -33,6 +33,7 @@ export default {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true', // remove this when not using ngrok
           }
         });
 

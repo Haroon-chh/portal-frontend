@@ -97,65 +97,67 @@ export default {
   methods: {
     // Fetch applications from the API
     async fetchApplications(url) {
-      try {
-        const accessToken = localStorage.getItem('access_token');
-        if (!accessToken) {
-          console.error('No access token found');
-          return;
-        }
+  try {
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      console.error('No access token found');
+      return;
+    }
 
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true', // remove this when not using ngrok
+      },
+    });
 
-        if (!response.ok) {
-          const errorBody = await response.text();
-          throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
-        }
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
+    }
 
-        const data = await response.json();
-        
-        // Correctly reference the applications array inside the data object
-        this.applications = Array.isArray(data.data.data) ? data.data.data : [];
-        this.pagination = data.data; // Set pagination details
-      } catch (error) {
-        this.errorMessage = `Error fetching applications: ${error.message}`;
-        console.error('Error:', error);
-      }
-    },
+    const data = await response.json();
+    this.applications = Array.isArray(data.data.data) ? data.data.data : [];
+    this.pagination = data.data;
+  } catch (error) {
+    this.errorMessage = `Error fetching applications: ${error.message}`;
+    console.error('Error:', error);
+  }
+}
+,
 
     // Accept application and handle response with SuccessPop and ErrorPopup
     async acceptApplication(applicationId) {
-      try {
-        const accessToken = localStorage.getItem('access_token');
-        if (!accessToken) {
-          console.error('No access token found');
-          return;
-        }
+  try {
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      console.error('No access token found');
+      return;
+    }
 
-        const response = await fetch(`https://28f0-139-135-54-19.ngrok-free.app/api/accept-application/${applicationId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
+    const response = await fetch(`https://28f0-139-135-54-19.ngrok-free.app/api/accept-application/${applicationId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true', // Skip the warning header
+      },
+    });
 
-        if (!response.ok) {
-          const errorBody = await response.text();
-          throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
-        }
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
+    }
 
-        const data = await response.json();
-        this.successMessage = data.message;
-        this.showSuccessPopup = true;
-      } catch (error) {
-        this.errorMessage = `Error accepting application: ${error.message}`;
-        console.error('Error:', error);
-      }
-    },
+    const data = await response.json();
+    this.successMessage = data.message;
+    this.showSuccessPopup = true;
+  } catch (error) {
+    this.errorMessage = `Error accepting application: ${error.message}`;
+    console.error('Error:', error);
+  }
+}
+,
 
     clearErrorMessage() {
       this.errorMessage = '';
