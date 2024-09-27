@@ -62,117 +62,119 @@
     </div>
   </template>
   
+  
   <script>
-  // Import ErrorPopup and SuccessPop components
-  import ErrorPopup from '../components/ErrorPopup.vue';
-  import SuccessPop from '../components/SuccessPopup.vue';
-  
-  export default {
-    components: {
-      ErrorPopup,
-      SuccessPop,
+// Import ErrorPopup and SuccessPop components
+import ErrorPopup from '../components/ErrorPopup.vue';
+import SuccessPop from '../components/SuccessPopup.vue';
+
+export default {
+  components: {
+    ErrorPopup,
+    SuccessPop,
+  },
+  data() {
+    return {
+      applications: [],
+      pagination: {},
+      errorMessage: '', // Holds error message for ErrorPopup
+      successMessage: '', // Holds success message for SuccessPop
+      showSuccessPopup: false,
+    };
+  },
+  computed: {
+    filteredApplications() {
+      return this.applications.filter((application) => application.accepted === 0);
     },
-    data() {
-      return {
-        applications: [],
-        pagination: {},
-        errorMessage: '', // Holds error message for ErrorPopup
-        successMessage: '', // Holds success message for SuccessPop
-        showSuccessPopup: false,
-      };
-    },
-    computed: {
-      filteredApplications() {
-        return this.applications.filter((application) => application.accepted === 0);
-      },
-    },
-    mounted() {
-      this.fetchApplications('http://192.168.15.156:8080/api/applications');
-    },
-    methods: {
-      // Fetch applications from the API
-      async fetchApplications(url) {
-        try {
-          const accessToken = localStorage.getItem('access_token');
-          if (!accessToken) {
-            console.error('No access token found');
-            return;
-          }
-  
-          const response = await fetch(url, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
-  
-          if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
-          }
-  
-          const data = await response.json();
-          this.applications = data.data;
-          this.pagination = data;
-        } catch (error) {
-          this.errorMessage = `Error fetching applications: ${error.message}`;
-          console.error('Error:', error);
+  },
+  mounted() {
+    this.fetchApplications('http://192.168.15.156:8080/api/applications');
+  },
+  methods: {
+    // Fetch applications from the API
+    async fetchApplications(url) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          console.error('No access token found');
+          return;
         }
-      },
-  
-      // Accept application and handle response with SuccessPop and ErrorPopup
-      async acceptApplication(applicationId) {
-        try {
-          const accessToken = localStorage.getItem('access_token');
-          if (!accessToken) {
-            this.errorMessage = 'No access token found. Please log in again.';
-            return;
-          }
-  
-          const response = await fetch(`http://192.168.15.156:8080/api/accept-application/${applicationId}`, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
-  
-          const responseData = await response.json();
-  
-          if (!response.ok) {
-            throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
-          }
-  
-          // Set success message from the response and show the popup
-          this.successMessage = responseData.message || 'Application accepted successfully';
-          this.showSuccessPopup = true;
-  
-          // Update the accepted status of the application in local state
-          this.applications = this.applications.map((app) =>
-            app.id === applicationId ? { ...app, accepted: 1 } : app
-          );
-  
-          // Refresh the applications list after a short delay
-          setTimeout(async () => {
-            await this.fetchApplications('http://192.168.15.156:8080/api/applications');
-            this.showSuccessPopup = false;
-          }, 2000); // Hide popup and refresh after 2 seconds
-        } catch (error) {
-          this.errorMessage = `Error accepting application: ${error.message}`;
-          console.error('Error accepting application:', error);
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
         }
-      },
-  
-      clearErrorMessage() {
-        this.errorMessage = '';
-      },
-  
-      clearSuccessMessage() {
-        this.showSuccessPopup = false;
-      },
+
+        const data = await response.json();
+        this.applications = data.data;
+        this.pagination = data;
+      } catch (error) {
+        this.errorMessage = `Error fetching applications: ${error.message}`;
+        console.error('Error:', error);
+      }
     },
-  };
-  </script>
+
+    // Accept application and handle response with SuccessPop and ErrorPopup
+    async acceptApplication(applicationId) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          this.errorMessage = 'No access token found. Please log in again.';
+          return;
+        }
+
+        const response = await fetch(`http://192.168.15.156:8080/api/accept-application/${applicationId}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+        }
+
+        // Set success message from the response and show the popup
+        this.successMessage = responseData.message || 'Application accepted successfully';
+        this.showSuccessPopup = true;
+
+        // Update the accepted status of the application in local state
+        this.applications = this.applications.map((app) =>
+          app.id === applicationId ? { ...app, accepted: 1 } : app
+        );
+
+        // Refresh the applications list after a short delay
+        setTimeout(async () => {
+          await this.fetchApplications('http://192.168.15.156:8080/api/applications');
+          this.showSuccessPopup = false;
+        }, 2000); // Hide popup and refresh after 2 seconds
+      } catch (error) {
+        this.errorMessage = `Error accepting application: ${error.message}`;
+        console.error('Error accepting application:', error);
+      }
+    },
+
+    clearErrorMessage() {
+      this.errorMessage = '';
+    },
+
+    clearSuccessMessage() {
+      this.showSuccessPopup = false;
+    },
+  },
+};
+</script>
+
   
   <style scoped>
   /* Additional styling remains unchanged */
