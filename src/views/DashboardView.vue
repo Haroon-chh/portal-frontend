@@ -2,7 +2,7 @@
   <div class="header">     
     <Header title="Dashboard" />
   </div>
-  <div>
+  <div class="content">
     <component :is="getComponentByRole()" />
   </div>
 </template>
@@ -64,4 +64,25 @@ export default {
 .header {
   margin-bottom: 5%;
 }
+.content {
+  margin-top: 5%;
+}
+@media (max-width: 1200px) {
+  .header {
+    margin-bottom: 13%;
+  }
+  .content {
+    margin-top: 13%;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    margin-bottom: 15%;
+  }
+  .content {
+    margin-left: 15%;
+  }
+}
+
 </style>
