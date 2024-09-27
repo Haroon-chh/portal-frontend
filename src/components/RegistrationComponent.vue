@@ -97,6 +97,17 @@ export default {
       attachment.value = event.target.files[0];
     };
 
+    const clearForm = () => {
+      firstName.value = '';
+      lastName.value = '';
+      email.value = '';
+      phone.value = '';
+      attachment.value = null;
+      // Reset the file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+    };
+
     const register = async () => {
       const name = `${firstName.value} ${lastName.value}`;
       const formData = new FormData();
@@ -116,9 +127,9 @@ export default {
         if (response.ok) {
           successMessage.value = data.message;
           showSuccess.value = true;
+          clearForm(); // Clear the form after successful submission
           setTimeout(() => {
             showSuccess.value = false;
-            // Optionally redirect or clear the form here
           }, 2000);
         } else {
           // Handle validation errors
