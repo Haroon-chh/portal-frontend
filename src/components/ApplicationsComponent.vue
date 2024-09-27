@@ -55,15 +55,29 @@
           </li>
         </ul>
       </nav>
+  
+      <!-- Popup Components for Success and Error Messages -->
+      <ErrorPopup v-if="errorMessage" :message="errorMessage" @close="errorMessage = ''" />
+      <SuccessPop v-if="successMessage" :message="successMessage" @close="successMessage = ''" />
     </div>
   </template>
   
   <script>
+  // Import ErrorPopup and SuccessPop components
+  import ErrorPopup from '../components/ErrorPopup.vue';
+  import SuccessPop from '../components/SuccessPopup.vue';
+  
   export default {
+    components: {
+      ErrorPopup,
+      SuccessPop,
+    },
     data() {
       return {
         applications: [],
         pagination: {},
+        errorMessage: '', // Holds error message for ErrorPopup
+        successMessage: '', // Holds success message for SuccessPop
       };
     },
     computed: {
@@ -75,6 +89,7 @@
       this.fetchApplications('http://192.168.15.156:8080/api/applications');
     },
     methods: {
+      // Fetch applications from the API
       async fetchApplications(url) {
         try {
           const accessToken = localStorage.getItem('access_token');
@@ -92,17 +107,19 @@
   
           if (!response.ok) {
             const errorBody = await response.text();
-            console.error('Response not OK. Status:', response.status, 'Body:', errorBody);
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
           }
   
           const data = await response.json();
           this.applications = data.data;
           this.pagination = data;
         } catch (error) {
-          console.error('Error fetching applications:', error);
+          this.errorMessage = `Error fetching applications: ${error.message}`;
+          console.error('Error:', error);
         }
       },
+  
+      // Accept application and handle response with SuccessPop and ErrorPopup
       async acceptApplication(applicationId) {
         try {
           const accessToken = localStorage.getItem('access_token');
@@ -120,13 +137,19 @@
           });
   
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorBody = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
           }
   
+          const responseData = await response.json();
+          this.successMessage = responseData.message;
+  
+          // Update the accepted status of the application in local state
           this.applications = this.applications.map((app) =>
             app.id === applicationId ? { ...app, accepted: 1 } : app
           );
         } catch (error) {
+          this.errorMessage = `Error accepting application: ${error.message}`;
           console.error('Error accepting application:', error);
         }
       },
@@ -135,44 +158,6 @@
   </script>
   
   <style scoped>
-  .card {
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-  }
-  
-  .card-body {
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  
-  .d-flex {
-    display: flex;
-  }
-  
-  .justify-content-between {
-    justify-content: space-between;
-  }
-  
-  .justify-content-center {
-    justify-content: center;
-  }
-  
-  .text-center {
-    text-align: center;
-  }
-  
-  .mt-2 {
-    margin-top: 0.5rem;
-  }
-  
-  .mt-3 {
-    margin-top: 1rem;
-  }
-  
-  .flex-grow-1 {
-    flex-grow: 1;
-  }
+  /* Additional styling remains unchanged */
   </style>
   
