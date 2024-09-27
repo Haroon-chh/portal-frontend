@@ -15,8 +15,8 @@ import 'bootstrap-vue-3/dist/bootstrap-vue-3.css'; // Import BootstrapVue 3 CSS
 const app = createApp(App);
 app.provide('axios', axios);
 
-// // Initialize store from localStorage
-// store.dispatch('initializeStore')
+// Initialize store from localStorage
+store.dispatch('initializeStore');
 
 // Use store, router, VueAxios, and BootstrapVue 3
 app.use(store)

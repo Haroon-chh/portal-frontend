@@ -1,53 +1,52 @@
-import { createRouter, createWebHistory } from 'vue-router'; 
-import LoginView from '../views/LoginView.vue'; 
-import RegistrationView from '../views/RegistrationView.vue'; 
-import DashboardView from '../views/DashboardView.vue'; 
+import { createRouter, createWebHistory } from 'vue-router';
+import LoginView from '../views/LoginView.vue';
+import RegistrationView from '../views/RegistrationView.vue';
+import DashboardView from '../views/DashboardView.vue';
 import ResetPasswordView from '../views/ResetPasswordView.vue';
 import ForgotPasswordView from '../views/ForgotPasswordView.vue';
 import StudentResultView from '../views/StudentResultView.vue';
+import RouteGuard from '../services/RouteGuard'; // Import the RouteGuard
 
 const routes = [
   {
     path: '/',
-    redirect: '/login' 
+    redirect: '/login'
   },
   {
     path: '/login',
     name: 'login',
     component: LoginView,
-    meta: { title: 'Login', requiresAuth: false } // No auth required
+    meta: { title: 'Login', requiresAuth: false }
   },
   {
     path: '/registration',
     name: 'registration',
     component: RegistrationView,
-    meta: { title: 'Registration', requiresAuth: false } // No auth required
+    meta: { title: 'Registration', requiresAuth: false }
   },
   {
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { title: 'Dashboard', requiresAuth: true } // Auth required
+    meta: { title: 'Dashboard', requiresAuth: true }
   },
   {
     path: '/reset-password',
     name: 'ResetPassword',
     component: ResetPasswordView,
-    meta: { title: 'Reset Password', requiresAuth: false } // Auth required
-
+    meta: { title: 'Reset Password', requiresAuth: false }
   },
   {
     path: '/forgot-password',
     name: 'ForgotPassword',
     component: ForgotPasswordView,
-    meta: { title: 'Forget Password', requiresAuth: false } // Auth required
-
+    meta: { title: 'Forget Password', requiresAuth: false }
   },
   {
     path: '/view-results',
     name: 'StudentResult',
     component: StudentResultView,
-    meta: { title: 'Student Result', requiresAuth: true } // Auth required
+    meta: { title: 'Student Result', requiresAuth: true, roles: ['admin'] }
   },
 ];
 
@@ -56,26 +55,10 @@ const router = createRouter({
   routes
 });
 
-// Global route guard for authentication and role checks
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!JSON.parse(localStorage.getItem('authUser')); // Check if user is logged in
+// Use the RouteGuard
+router.beforeEach(RouteGuard);
 
-  // Check if the route requires authentication
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isAuthenticated) {
-      // Redirect to login if not authenticated
-      next('/login');
-    } else {
-      // Allow access if authenticated, else redirect to login
-      next();
-    }
-  } else {
-    // Proceed to the route if no auth is required
-    next();
-  }
-});
-
-// Dynamically change the document title
+// Set document title
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title || 'Default App Title';
   next();
