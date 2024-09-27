@@ -74,46 +74,87 @@
 
 <script>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import ApiService from '@/services/ApiServices';
+import SuccessPopup from '../components/SuccessPopup.vue'; // Update the path as necessary
+import ErrorPopup from '../components/ErrorPopup.vue'; // Update the path as necessary
 
 export default {
+  components: {
+    SuccessPopup,
+    ErrorPopup,
+  },
   setup() {
-    const router = useRouter();
-    const name = ref('');
+    const firstName = ref('');
+    const lastName = ref('');
     const email = ref('');
-    const password = ref('');
+    const phone = ref('');
+    const attachment = ref(null);
+    const successMessage = ref('');
     const errorMessage = ref('');
+    const showSuccess = ref(false);
+    const showError = ref(false);
+
+    const handleFileUpload = (event) => {
+      attachment.value = event.target.files[0];
+    };
 
     const register = async () => {
+      const name = `${firstName.value} ${lastName.value}`;
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email.value);
+      formData.append('phone', phone.value);
+      formData.append('attachment', attachment.value);
+
       try {
-        const response = await ApiService.post('/register', {
-          name: name.value,
-          email: email.value,
-          password: password.value
+        const response = await fetch('http://192.168.15.156:8080/api/apply', {
+          method: 'POST',
+          body: formData,
         });
 
-        if (response.data.message === 'User registered successfully') {
-          router.push('/login');
+        const data = await response.json();
+
+        if (response.ok) {
+          successMessage.value = data.message;
+          showSuccess.value = true;
+          setTimeout(() => {
+            showSuccess.value = false;
+            // Optionally redirect or clear the form here
+          }, 2000);
         } else {
-          errorMessage.value = 'Registration failed. Please try again.';
+          // Handle validation errors
+          const validatorErrors = data['validator object'] || {};
+          errorMessage.value = validatorErrors.email ? validatorErrors.email[0] : 'Registration failed. Please try again.';
+          showError.value = true;
+          setTimeout(() => {
+            showError.value = false;
+          }, 2000);
         }
       } catch (error) {
         console.error('Registration error:', error);
-        errorMessage.value = error.response?.data?.message || 'An error occurred during registration.';
+        errorMessage.value = 'An error occurred during registration.';
+        showError.value = true;
+        setTimeout(() => {
+          showError.value = false;
+        }, 2000);
       }
     };
 
     return {
-      name,
+      firstName,
+      lastName,
       email,
-      password,
+      phone,
+      handleFileUpload,
       register,
-      errorMessage
+      successMessage,
+      errorMessage,
+      showSuccess,
+      showError,
     };
   }
 };
 </script>
+
 
 <style scoped>
 .signup-body {
@@ -173,7 +214,7 @@ export default {
   left: 5px;
   background-color: rgba(255, 255, 255, 0);
   padding: 0 5px;
-  color:white;
+  color: white;
   transition: 0.3s ease all;
   pointer-events: none;
   font-size: 14px;
@@ -184,7 +225,7 @@ export default {
   top: -25px;
   left: 0;
   font-size: 16px;
-  color:black;
+  color: black;
   background-color: rgba(255, 255, 255, 0);
 }
 
@@ -196,10 +237,6 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .image-container {
-    display: none important;
-  }
-  
   .signup-card {
     max-width: 100%;
   }
