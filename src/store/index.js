@@ -3,42 +3,45 @@ import { createStore } from 'vuex';
 export default createStore({
   state: {
     user: null,
+    loggedUser: null,
   },
   getters: {
     getUser: (state) => state.user,
     getUserRole: (state) => state.user ? state.user.role : null,
     getUserPermissions: (state) => state.user ? state.user.permissions : [],
+    getLoggedUser: (state) => state.loggedUser,
   },
   mutations: {
     setUser(state, userData) {
       state.user = userData;
     },
+    setLoggedUser(state, loggedUserData) {
+      state.loggedUser = loggedUserData;
+    },
     clearUser(state) {
       state.user = null;
+      state.loggedUser = null;
     },
   },
   actions: {
     loginUser({ commit }, userData) {
-      // Store the entire response in localStorage as 'authUser'
       localStorage.setItem('authUser', JSON.stringify(userData));
-      
-      // Store the access token, role, and permissions separately
       localStorage.setItem('access_token', userData.data.access_token);
       localStorage.setItem('userRole', userData.data.role);
       localStorage.setItem('userPermissions', JSON.stringify(userData.data.permissions));
-
-      // Commit the user data to the Vuex store
-      commit('setUser', userData.data);  // This sets the user state with the role and permissions
+      commit('setUser', userData.data);
     },
     logoutUser({ commit }) {
-      // Clear localStorage
       localStorage.removeItem('access_token');
       localStorage.removeItem('userRole');
       localStorage.removeItem('userPermissions');
-      localStorage.removeItem('authUser'); // Clear authUser as well
-
-      // Clear user data in the Vuex store
+      localStorage.removeItem('authUser');
+      localStorage.removeItem('logged_user');
       commit('clearUser');
+    },
+    setLoggedUserData({ commit }, loggedUserData) {
+      localStorage.setItem('logged_user', JSON.stringify(loggedUserData));
+      commit('setLoggedUser', loggedUserData);
     },
   },
 });
