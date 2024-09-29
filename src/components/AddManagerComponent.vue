@@ -46,6 +46,11 @@
   const successMessage = ref('');
   const errorMessage = ref('');
 
+  const clearForm = () => {
+    manager.value.name = '';
+    manager.value.email = '';
+  };
+
   const addManager = async () => {
     try {
       const accessToken = localStorage.getItem('access_token');
@@ -66,8 +71,7 @@
       if (response.status === 200 && response.data) {
         successMessage.value = response.data.message;
         showSuccess.value = true;
-        manager.value.name = '';
-        manager.value.email = '';
+        clearForm();
 
         setTimeout(() => {
           showSuccess.value = false;
@@ -90,6 +94,7 @@
       showError.value = true;
       setTimeout(() => {
         showError.value = false;
+        errorMessage.value = '';
       }, 5000);
     }
   };

@@ -46,6 +46,11 @@
   const successMessage = ref('');
   const errorMessage = ref('');
   
+  const clearForm = () => {
+    supervisor.value.name = '';
+    supervisor.value.email = '';
+  };
+  
   const addSupervisor = async () => {
     try {
       const accessToken = localStorage.getItem('access_token');
@@ -66,8 +71,7 @@
       if (response.status === 200 && response.data) {
         successMessage.value = response.data.message;
         showSuccess.value = true;
-        supervisor.value.name = '';
-        supervisor.value.email = '';
+        clearForm();
   
         setTimeout(() => {
           showSuccess.value = false;
@@ -90,6 +94,7 @@
       showError.value = true;
       setTimeout(() => {
         showError.value = false;
+        errorMessage.value = '';
       }, 5000);
     }
   };
@@ -140,4 +145,3 @@
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
   }
   </style>
-  
