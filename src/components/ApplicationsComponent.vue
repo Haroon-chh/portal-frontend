@@ -1,13 +1,26 @@
 <template>
   <div>
-    <h2 class="mb-4">Student Applications</h2>
-    <div class="mb-3">
-      <input v-model="searchTerm" @input="searchApplications" class="form-control" type="text" placeholder="Search applications...">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Student Applications</h2>
+      <div class="search-container">
+        <div class="input-group">
+          <span class="input-group-text">
+            <span class="material-icons">search</span>
+          </span>
+          <input 
+            v-model="searchTerm" 
+            @input="searchApplications" 
+            class="form-control" 
+            type="text" 
+            placeholder="Search applications..."
+          >
+        </div>
+      </div>
     </div>
     <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
     
     <div class="card-columns">
-      <div v-for="application in applications" :key="application.id" class="card mb-4">
+      <div v-for="application in filteredApplications" :key="application.id" class="card mb-4">
         <div class="card-body">
           <h5 class="card-title">{{ application.name }}</h5>
           <p class="card-text">Email: {{ application.email }}</p>
@@ -60,38 +73,20 @@ export default defineComponent({
     const showError = ref(false);
     const successMessage = ref('');
     const errorMessage = ref('');
+    const searchTerm = ref('');
 
-    const displayedPages = computed(() => {
-      const current = pagination.value.current_page;
-      const last = pagination.value.last_page;
-      const range = [];
-
-      if (last <= 7) {
-        for (let i = 1; i <= last; i++) {
-          range.push(i);
-        }
-      } else {
-        if (current <= 4) {
-          for (let i = 1; i <= 5; i++) {
-            range.push(i);
-          }
-          range.push('...', last);
-        } else if (current >= last - 3) {
-          range.push(1, '...');
-          for (let i = last - 4; i <= last; i++) {
-            range.push(i);
-          }
-        } else {
-          range.push(1, '...');
-          for (let i = current - 1; i <= current + 1; i++) {
-            range.push(i);
-          }
-          range.push('...', last);
-        }
-      }
-
-      return range;
+    const filteredApplications = computed(() => {
+      if (!searchTerm.value) return applications.value;
+      return applications.value.filter(app => 
+        app.name.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+        app.email.toLowerCase().includes(searchTerm.value.toLowerCase())
+      );
     });
+
+    const searchApplications = () => {
+      // This function is now just a placeholder for future server-side search implementation
+      // The actual filtering is done by the computed property
+    };
 
     const fetchApplications = async (page = 1) => {
       try {
@@ -231,6 +226,38 @@ export default defineComponent({
       }, 5000);
     };
 
+    const displayedPages = computed(() => {
+      const current = pagination.value.current_page;
+      const last = pagination.value.last_page;
+      const range = [];
+
+      if (last <= 7) {
+        for (let i = 1; i <= last; i++) {
+          range.push(i);
+        }
+      } else {
+        if (current <= 4) {
+          for (let i = 1; i <= 5; i++) {
+            range.push(i);
+          }
+          range.push('...', last);
+        } else if (current >= last - 3) {
+          range.push(1, '...');
+          for (let i = last - 4; i <= last; i++) {
+            range.push(i);
+          }
+        } else {
+          range.push(1, '...');
+          for (let i = current - 1; i <= current + 1; i++) {
+            range.push(i);
+          }
+          range.push('...', last);
+        }
+      }
+
+      return range;
+    });
+
     onMounted(() => {
       fetchApplications();
     });
@@ -246,7 +273,10 @@ export default defineComponent({
       viewCV,
       acceptApplication,
       rejectApplication,
-      displayedPages,
+      displayedPages,  // Make sure this line is included
+      searchTerm,
+      searchApplications,
+      filteredApplications,
     };
   },
 });
@@ -263,5 +293,28 @@ export default defineComponent({
 }
 .pagination {
   justify-content: center;
+}
+
+.search-container {
+  max-width: 300px;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-right: none;
+}
+
+.form-control {
+  border-left: none;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: #ced4da;
+}
+
+.material-icons {
+  font-size: 20px;
+  color: #6c757d;
 }
 </style>
