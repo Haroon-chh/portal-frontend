@@ -35,33 +35,32 @@
       </ul>
     </nav>
 
-    <AcceptPopup v-if="showSuccessPopup" :message="successMessage" @close="showSuccessPopup = false" />
-    <ErrorPopup v-if="showErrorPopup" :message="errorMessage" @close="showErrorPopup = false" />
+    <SuccessPopup :show="showSuccess" :message="successMessage" />
+    <ErrorPopup :show="showError" :message="errorMessage" />
   </div>
 </template>
 
 <script>
+import { ref, defineComponent, onMounted } from 'vue';
 import axios from 'axios';
-import AcceptPopup from '../components/SuccessPopup.vue';
+import SuccessPopup from '../components/SuccessPopup.vue';
 import ErrorPopup from '../components/ErrorPopup.vue';
 
-export default {
+export default defineComponent({
+  name: 'ApplicationsComponent',
   components: {
-    AcceptPopup,
+    SuccessPopup,
     ErrorPopup,
   },
-  data() {
-    return {
-      applications: [],
-      pagination: {},
-      errorMessage: '',
-      successMessage: '',
-      showSuccessPopup: false,
-      showErrorPopup: false,
-    };
-  },
-  methods: {
-    async fetchApplications(url = null) {
+  setup() {
+    const applications = ref([]);
+    const pagination = ref({});
+    const showSuccess = ref(false);
+    const showError = ref(false);
+    const successMessage = ref('');
+    const errorMessage = ref('');
+
+    const fetchApplications = async (url = null) => {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
@@ -79,21 +78,21 @@ export default {
           },
         });
 
-        this.applications = response.data.data.data || [];
-        this.pagination = response.data.data;
+        applications.value = response.data.data.data || [];
+        pagination.value = response.data.data;
       } catch (error) {
-        this.errorMessage = `Error fetching applications: ${error.message}`;
-        this.showErrorPopup = true;
-        console.error('Error:', error);
+        handleError(error, 'Error fetching applications');
       }
-    },
-    async viewCV(applicationId) {
-      const application = this.applications.find(app => app.id === applicationId);
+    };
+
+    const viewCV = (applicationId) => {
+      const application = applications.value.find(app => app.id === applicationId);
       if (application && application.attachment) {
         window.open(application.attachment, '_blank');
       }
-    },
-    async acceptApplication(applicationId) {
+    };
+
+    const acceptApplication = async (applicationId) => {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
@@ -110,16 +109,19 @@ export default {
           },
         });
 
-        this.successMessage = response.data.message;
-        this.showSuccessPopup = true;
-        this.fetchApplications();
+        successMessage.value = response.data.message;
+        showSuccess.value = true;
+        fetchApplications();
+
+        setTimeout(() => {
+          showSuccess.value = false;
+        }, 5000);
       } catch (error) {
-        this.errorMessage = `Error accepting application: ${error.message}`;
-        this.showErrorPopup = true;
-        console.error('Error:', error);
+        handleError(error, 'Error accepting application');
       }
-    },
-    async rejectApplication(applicationId) {
+    };
+
+    const rejectApplication = async (applicationId) => {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
@@ -136,20 +138,50 @@ export default {
           },
         });
 
-        this.successMessage = response.data.message;
-        this.showSuccessPopup = true;
-        this.fetchApplications();
+        successMessage.value = response.data.message;
+        showSuccess.value = true;
+        fetchApplications();
+
+        setTimeout(() => {
+          showSuccess.value = false;
+        }, 5000);
       } catch (error) {
-        this.errorMessage = `Error rejecting application: ${error.message}`;
-        this.showErrorPopup = true;
-        console.error('Error:', error);
+        handleError(error, 'Error rejecting application');
       }
-    },
+    };
+
+    const handleError = (error, defaultMessage) => {
+      console.error('Error:', error);
+      if (error.response && error.response.status === 400) {
+        errorMessage.value = error.response.data.message || defaultMessage;
+      } else {
+        errorMessage.value = `${defaultMessage}: ${error.message}`;
+      }
+      showError.value = true;
+      
+      setTimeout(() => {
+        showError.value = false;
+      }, 5000);
+    };
+
+    onMounted(() => {
+      fetchApplications();
+    });
+
+    return {
+      applications,
+      pagination,
+      showSuccess,
+      showError,
+      successMessage,
+      errorMessage,
+      fetchApplications,
+      viewCV,
+      acceptApplication,
+      rejectApplication,
+    };
   },
-  created() {
-    this.fetchApplications();
-  },
-};
+});
 </script>
 
 <style scoped>
