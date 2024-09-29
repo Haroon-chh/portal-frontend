@@ -19,7 +19,7 @@
       </div>
       
       <div class="row">
-        <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="student in filteredStudents" :key="student.id">
+        <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="student in paginatedStudents" :key="student.id">
           <div class="card p-3 mb-2 student-card">
             <h5>{{ student.name }}</h5>
             <p class="mb-1">Email: {{ student.email }}</p>
@@ -38,16 +38,16 @@
   
       <div class="pagination mt-4 d-flex justify-content-center align-items-center">
         <button 
-          v-if="pagination.current_page > 1" 
-          @click="fetchStudents(pagination.current_page - 1)" 
+          v-if="currentPage > 1" 
+          @click="currentPage--" 
           class="btn btn-outline-primary me-2"
         >
           <span class="material-icons">navigate_before</span> Previous
         </button>
-        <span class="mx-2">Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+        <span class="mx-2">Page {{ currentPage }} of {{ totalPages }}</span>
         <button 
-          v-if="pagination.current_page < pagination.last_page" 
-          @click="fetchStudents(pagination.current_page + 1)" 
+          v-if="currentPage < totalPages" 
+          @click="currentPage++" 
           class="btn btn-outline-primary ms-2"
         >
           Next <span class="material-icons">navigate_next</span>
@@ -92,7 +92,6 @@ export default {
   },
   setup() {
     const students = ref([]);
-    const pagination = ref({});
     const showSuccess = ref(false);
     const showError = ref(false);
     const successMessage = ref('');
@@ -100,6 +99,8 @@ export default {
     const showConfirm = ref(false);
     const studentIdToDelete = ref(null);
     const searchQuery = ref('');
+    const currentPage = ref(1);
+    const itemsPerPage = 12;
 
     const filteredStudents = computed(() => {
       if (searchQuery.value) {
@@ -110,12 +111,19 @@ export default {
       return students.value;
     });
 
+    const totalPages = computed(() => Math.ceil(filteredStudents.value.length / itemsPerPage));
+
+    const paginatedStudents = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      return filteredStudents.value.slice(start, end);
+    });
+
     const handleSearch = () => {
-      // If you want to trigger a new API call when searching, uncomment the next line
-      // fetchStudents(1, searchQuery.value);
+      currentPage.value = 1; // Reset to first page when searching
     };
 
-    const fetchStudents = async (page = 1, search = '') => {
+    const fetchStudents = async () => {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
@@ -124,10 +132,6 @@ export default {
         }
 
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/students`, {
-          params: {
-            page: page,
-            search: search
-          },
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -135,12 +139,7 @@ export default {
           },
         });
 
-        students.value = response.data.data.data;
-        pagination.value = {
-          current_page: response.data.data.current_page,
-          last_page: response.data.data.last_page,
-          total: response.data.data.total,
-        };
+        students.value = response.data.data;
       } catch (error) {
         console.error('Error fetching students:', error);
         showError.value = true;
@@ -180,7 +179,7 @@ export default {
             successMessage.value = '';
           }, 3000);
           // Refresh the student list
-          fetchStudents(pagination.value.current_page, searchQuery.value);
+          fetchStudents();
         }
       } catch (error) {
         console.error('Error deleting student:', error);
@@ -200,9 +199,7 @@ export default {
     });
 
     return {
-      students,
-      filteredStudents,
-      pagination,
+      paginatedStudents,
       showSuccess,
       showError,
       successMessage,
@@ -210,9 +207,10 @@ export default {
       showConfirm,
       confirmDelete,
       deleteStudent,
-      fetchStudents,
       searchQuery,
       handleSearch,
+      currentPage,
+      totalPages,
     };
   },
 };

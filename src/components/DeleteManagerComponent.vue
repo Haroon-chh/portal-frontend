@@ -19,7 +19,7 @@
       </div>
       
       <div class="row">
-        <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="manager in filteredManagers" :key="manager.id">
+        <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="manager in paginatedManagers" :key="manager.id">
           <div class="card p-3 mb-2 manager-card">
             <h5>{{ manager.name }}</h5>
             <p class="mb-1">Email: {{ manager.email }}</p>
@@ -37,16 +37,16 @@
   
       <div class="pagination mt-4 d-flex justify-content-center align-items-center">
         <button 
-          v-if="pagination.current_page > 1" 
-          @click="fetchManagers(pagination.current_page - 1)" 
+          v-if="currentPage > 1" 
+          @click="currentPage--" 
           class="btn btn-outline-primary me-2"
         >
           <span class="material-icons">navigate_before</span> Previous
         </button>
-        <span class="mx-2">Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+        <span class="mx-2">Page {{ currentPage }} of {{ totalPages }}</span>
         <button 
-          v-if="pagination.current_page < pagination.last_page" 
-          @click="fetchManagers(pagination.current_page + 1)" 
+          v-if="currentPage < totalPages" 
+          @click="currentPage++" 
           class="btn btn-outline-primary ms-2"
         >
           Next <span class="material-icons">navigate_next</span>
@@ -90,7 +90,6 @@
     },
     setup() {
       const managers = ref([]);
-      const pagination = ref({});
       const showSuccess = ref(false);
       const showError = ref(false);
       const successMessage = ref('');
@@ -98,6 +97,8 @@
       const showConfirm = ref(false);
       const managerIdToDelete = ref(null);
       const searchQuery = ref('');
+      const currentPage = ref(1);
+      const itemsPerPage = 12;
   
       const filteredManagers = computed(() => {
         if (searchQuery.value) {
@@ -108,12 +109,19 @@
         return managers.value;
       });
   
+      const totalPages = computed(() => Math.ceil(filteredManagers.value.length / itemsPerPage));
+  
+      const paginatedManagers = computed(() => {
+        const start = (currentPage.value - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        return filteredManagers.value.slice(start, end);
+      });
+  
       const handleSearch = () => {
-        // If you want to trigger a new API call when searching, uncomment the next line
-        // fetchManagers(1, searchQuery.value);
+        currentPage.value = 1; // Reset to first page when searching
       };
   
-      const fetchManagers = async (page = 1, search = '') => {
+      const fetchManagers = async () => {
         try {
           const accessToken = localStorage.getItem('access_token');
           if (!accessToken) {
@@ -122,10 +130,6 @@
           }
   
           const response = await axios.get(`${process.env.VUE_APP_API_URL}/managers`, {
-            params: {
-              page: page,
-              search: search
-            },
             headers: {
               Authorization: `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
@@ -133,12 +137,7 @@
             },
           });
   
-          managers.value = response.data.data.data;
-          pagination.value = {
-            current_page: response.data.data.current_page,
-            last_page: response.data.data.last_page,
-            total: response.data.data.total,
-          };
+          managers.value = response.data.data;
         } catch (error) {
           console.error('Error fetching managers:', error);
           showError.value = true;
@@ -178,7 +177,7 @@
               successMessage.value = '';
             }, 3000);
             // Refresh the manager list
-            fetchManagers(pagination.value.current_page, searchQuery.value);
+            fetchManagers();
           }
         } catch (error) {
           console.error('Error deleting manager:', error);
@@ -198,9 +197,7 @@
       });
   
       return {
-        managers,
-        filteredManagers,
-        pagination,
+        paginatedManagers,
         showSuccess,
         showError,
         successMessage,
@@ -208,9 +205,10 @@
         showConfirm,
         confirmDelete,
         deleteManager,
-        fetchManagers,
         searchQuery,
         handleSearch,
+        currentPage,
+        totalPages,
       };
     },
   };

@@ -19,7 +19,7 @@
     </div>
     
     <div class="row">
-      <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="supervisor in filteredSupervisors" :key="supervisor.id">
+      <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="supervisor in paginatedSupervisors" :key="supervisor.id">
         <div class="card p-3 mb-2 supervisor-card">
           <h5>{{ supervisor.name }}</h5>
           <p class="mb-1">Email: {{ supervisor.email }}</p>
@@ -37,16 +37,16 @@
 
     <div class="pagination mt-4 d-flex justify-content-center align-items-center">
       <button 
-        v-if="pagination.current_page > 1" 
-        @click="fetchSupervisors(pagination.current_page - 1)" 
+        v-if="currentPage > 1" 
+        @click="currentPage--" 
         class="btn btn-outline-primary me-2"
       >
         <span class="material-icons">navigate_before</span> Previous
       </button>
-      <span class="mx-2">Page {{ pagination.current_page }} of {{ pagination.last_page }}</span>
+      <span class="mx-2">Page {{ currentPage }} of {{ totalPages }}</span>
       <button 
-        v-if="pagination.current_page < pagination.last_page" 
-        @click="fetchSupervisors(pagination.current_page + 1)" 
+        v-if="currentPage < totalPages" 
+        @click="currentPage++" 
         class="btn btn-outline-primary ms-2"
       >
         Next <span class="material-icons">navigate_next</span>
@@ -90,7 +90,6 @@ export default {
   },
   setup() {
     const supervisors = ref([]);
-    const pagination = ref({});
     const showSuccess = ref(false);
     const showError = ref(false);
     const successMessage = ref('');
@@ -98,6 +97,8 @@ export default {
     const showConfirm = ref(false);
     const supervisorIdToDelete = ref(null);
     const searchQuery = ref('');
+    const currentPage = ref(1);
+    const itemsPerPage = 12;
 
     const filteredSupervisors = computed(() => {
       if (searchQuery.value) {
@@ -108,12 +109,19 @@ export default {
       return supervisors.value;
     });
 
+    const totalPages = computed(() => Math.ceil(filteredSupervisors.value.length / itemsPerPage));
+
+    const paginatedSupervisors = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      return filteredSupervisors.value.slice(start, end);
+    });
+
     const handleSearch = () => {
-      // If you want to trigger a new API call when searching, uncomment the next line
-      // fetchSupervisors(1, searchQuery.value);
+      currentPage.value = 1; // Reset to first page when searching
     };
 
-    const fetchSupervisors = async (page = 1, search = '') => {
+    const fetchSupervisors = async () => {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
@@ -122,10 +130,6 @@ export default {
         }
 
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/supervisors`, {
-          params: {
-            page: page,
-            search: search
-          },
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -133,12 +137,7 @@ export default {
           },
         });
 
-        supervisors.value = response.data.data.data;
-        pagination.value = {
-          current_page: response.data.data.current_page,
-          last_page: response.data.data.last_page,
-          total: response.data.data.total,
-        };
+        supervisors.value = response.data.data;
       } catch (error) {
         console.error('Error fetching supervisors:', error);
         showError.value = true;
@@ -178,7 +177,7 @@ export default {
             successMessage.value = '';
           }, 3000);
           // Refresh the supervisor list
-          fetchSupervisors(pagination.value.current_page, searchQuery.value);
+          fetchSupervisors();
         }
       } catch (error) {
         console.error('Error deleting supervisor:', error);
@@ -198,9 +197,7 @@ export default {
     });
 
     return {
-      supervisors,
-      filteredSupervisors,
-      pagination,
+      paginatedSupervisors,
       showSuccess,
       showError,
       successMessage,
@@ -208,9 +205,10 @@ export default {
       showConfirm,
       confirmDelete,
       deleteSupervisor,
-      fetchSupervisors,
       searchQuery,
       handleSearch,
+      currentPage,
+      totalPages,
     };
   },
 };
