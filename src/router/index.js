@@ -6,6 +6,7 @@ import ResetPasswordView from '../views/ResetPasswordView.vue';
 import ForgotPasswordView from '../views/ForgotPasswordView.vue';
 import StudentResultView from '../views/StudentResultView.vue';
 import AddStaffView from '../views/AddStaffView.vue';
+import DeleteUserView from '../views/DeleteUserView.vue';
 import RouteGuard from '../services/RouteGuard'; // Import the RouteGuard
 
 const routes = [
@@ -54,6 +55,12 @@ const routes = [
     name: 'AddStaff',
     component: AddStaffView,
     meta: { title: 'Add Manager', requiresAuth: true, roles: ['admin'] }
+  },
+  {
+    path: '/delete-user',
+    name: 'DeleteUser',
+    component: DeleteUserView,
+    meta: { title: 'Delete User', requiresAuth: true, roles: ['admin'] }
   }
 ];
 

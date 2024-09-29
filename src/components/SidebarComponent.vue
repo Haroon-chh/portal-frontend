@@ -19,7 +19,7 @@
           <span class="material-icons">person_add</span>
           <span v-if="isExpanded" class="text">Add Staff</span>
         </router-link>
-        <router-link to="/delete-users" class="menu-item">
+        <router-link to="/delete-user" class="menu-item">
           <span class="material-icons">person_remove</span>
           <span v-if="isExpanded" class="text">Delete Users</span>
         </router-link>
