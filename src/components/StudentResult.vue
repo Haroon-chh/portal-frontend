@@ -1,167 +1,218 @@
 <template>
-    <div class="container mt-4">
-      <h2 class="text-center">Students List</h2>
-  
-      <!-- Cards for Students -->
-      <div class="row">
-        <div class="col-md-12" v-if="filteredStudents.length">
-          <div class="card mb-3" v-for="student in filteredStudents" :key="student.id">
-            <div class="card-body d-flex flex-column justify-content-between">
-              <!-- Student Data -->
-              <div class="row text-center">
-                <div class="col-12 col-md-4">
-                  <strong>Name</strong>
-                  <div>{{ student.name }}</div>
-                </div>
-                <div class="col-12 col-md-4">
-                  <strong>Email</strong>
-                  <div>{{ student.email }}</div>
-                </div>
-                <div class="col-12 col-md-4">
-                  <strong>Phone</strong>
-                  <div>{{ student.phone }}</div>
-                </div>
-              </div>
-  
-              <!-- Action Button to View Results -->
-              <div class="d-flex justify-content-center mt-3">
-                <button
-                  class="btn btn-primary"
-                  @click="viewResults(student.id)"
-                >
-                  View Results
-                </button>
-              </div>
-            </div>
+  <div class="container mt-4">
+    <h2 class="mb-4"><span class="material-icons">school</span> Students List</h2>
+
+    <!-- Search bar -->
+    <div class="mb-4 search-container">
+      <div class="input-group">
+        <span class="input-group-text">
+          <span class="material-icons">search</span>
+        </span>
+        <input 
+          v-model="searchQuery" 
+          @input="handleSearch"
+          type="text" 
+          class="form-control form-control-sm" 
+          placeholder="Search student by name..."
+        >
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="student in paginatedStudents" :key="student.id">
+        <div class="card p-3 mb-2 student-card">
+          <h5>{{ student.name }}</h5>
+          <p class="mb-1">Email: {{ student.email }}</p>
+          <p class="mb-1">Phone: {{ student.phone }}</p>
+          <div class="text-center mt-3">
+            <button class="btn btn-primary btn-sm" @click="viewResults(student.id)">
+              View Results
+            </button>
           </div>
         </div>
-        <p v-else>No students found.</p>
       </div>
-  
-      <!-- Pagination -->
-      <nav v-if="pagination.links && pagination.links.length > 3">
-        <ul class="pagination justify-content-center">
-          <li
-            v-for="link in pagination.links"
-            :key="link.label"
-            :class="['page-item', { active: link.active, disabled: !link.url }]"
-          >
-            <a
-              class="page-link"
-              href="#"
-              @click.prevent="link.url && fetchStudents(link.url)"
-              v-html="link.label"
-            ></a>
-          </li>
-        </ul>
-      </nav>
-  
-      <!-- Popup Components for Success and Error Messages -->
-      <ErrorPopup v-if="errorMessage" :message="errorMessage" @close="clearErrorMessage" />
-      <SuccessPop v-if="showSuccessPopup" :message="successMessage" @close="clearSuccessMessage" />
     </div>
-  </template>
-  
-  <script>
-  // Import ErrorPopup and SuccessPop components
-  import ErrorPopup from '../components/ErrorPopup.vue';
-  import SuccessPop from '../components/SuccessPopup.vue';
-  
-  export default {
-    components: {
-      ErrorPopup,
-      SuccessPop,
-    },
-    data() {
-      return {
-        students: [],
-        pagination: {},
-        errorMessage: '',
-        successMessage: '',
-        showSuccessPopup: false,
-      };
-    },
-    computed: {
-      filteredStudents() {
-        return this.students; // You can apply any filtering if needed
-      },
-    },
-    mounted() {
-      const apiUrl = process.env.VUE_APP_API_URL ;
-      this.fetchStudents(`${apiUrl}/students`);
-    },
-    methods: {
-      // Fetch students from the API
-      async fetchStudents(url) {
-        try {
-          const accessToken = localStorage.getItem('access_token');
-          if (!accessToken) {
-            console.error('No access token found');
-            return;
-          }
-  
-          const response = await fetch(url, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': 'true', // Skip the warning header
-            },
-          });
-  
-          if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
-          }
-  
-          const responseData = await response.json();
-          
-          // Update this part to match the response structure
-          if (responseData.data && responseData.data.data) {
-            this.students = responseData.data.data;
-            this.pagination = responseData.data;
-          } else {
-            console.error('Unexpected response structure:', responseData);
-            this.errorMessage = 'Unexpected data structure received from the server.';
-          }
-        } catch (error) {
-          this.errorMessage = `Error fetching students: ${error.message}`;
-          console.error('Error:', error);
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" v-if="totalPages > 1">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Previous</a>
+        </li>
+        <li class="page-item" v-for="page in displayedPages" :key="page" :class="{ active: page === currentPage }">
+          <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+        </li>
+      </ul>
+    </nav>
+
+    <SuccessPopup :show="showSuccess" :message="successMessage" />
+    <ErrorPopup :show="showError" :message="errorMessage" />
+  </div>
+</template>
+
+<script>
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+import SuccessPopup from './SuccessPopup.vue';
+import ErrorPopup from './ErrorPopup.vue';
+
+export default {
+  name: 'StudentResultComponent',
+  components: {
+    SuccessPopup,
+    ErrorPopup,
+  },
+  setup() {
+    const students = ref([]);
+    const showSuccess = ref(false);
+    const showError = ref(false);
+    const successMessage = ref('');
+    const errorMessage = ref('');
+    const searchQuery = ref('');
+    const currentPage = ref(1);
+    const itemsPerPage = 12;
+
+    const filteredStudents = computed(() => {
+      if (searchQuery.value) {
+        return students.value.filter(student => 
+          student.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      }
+      return students.value;
+    });
+
+    const totalPages = computed(() => Math.ceil(filteredStudents.value.length / itemsPerPage));
+
+    const paginatedStudents = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      return filteredStudents.value.slice(start, end);
+    });
+
+    const displayedPages = computed(() => {
+      const range = [];
+      const delta = 2;
+      for (let i = Math.max(2, currentPage.value - delta); i <= Math.min(totalPages.value - 1, currentPage.value + delta); i++) {
+        range.push(i);
+      }
+      if (currentPage.value - delta > 2) range.unshift("...");
+      if (currentPage.value + delta < totalPages.value - 1) range.push("...");
+      range.unshift(1);
+      if (totalPages.value !== 1) range.push(totalPages.value);
+      return range;
+    });
+
+    const handleSearch = () => {
+      currentPage.value = 1;
+    };
+
+    const changePage = (page) => {
+      if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+      }
+    };
+
+    const fetchStudents = async () => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          console.error('No access token found');
+          return;
         }
-      },
-  
-      // Navigate to view results for the selected student
-      viewResults(studentId) {
-        // Logic to view results, e.g., routing or fetching student results
-        console.log(`Viewing results for student ID: ${studentId}`);
-        // You can navigate to another route or open a modal to show results
-      },
-  
-      clearErrorMessage() {
-        this.errorMessage = '';
-      },
-  
-      clearSuccessMessage() {
-        this.showSuccessPopup = false;
-      },
-    },
-  };
-  </script>
-  
-  <style scoped>
-  /* Ensure container adjusts well for mobile devices */
-  .container {
-    margin-top: 20px;
+
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/students`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
+          },
+        });
+
+        students.value = response.data.data;
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        showError.value = true;
+        errorMessage.value = `Error fetching students: ${error.message}`;
+        setTimeout(() => {
+          showError.value = false;
+        }, 3000);
+      }
+    };
+
+    const viewResults = (studentId) => {
+      // Implement the logic to view results for a specific student
+      console.log(`Viewing results for student ID: ${studentId}`);
+      // You can navigate to another route or open a modal to show results
+    };
+
+    onMounted(() => {
+      fetchStudents();
+    });
+
+    return {
+      paginatedStudents,
+      showSuccess,
+      showError,
+      successMessage,
+      errorMessage,
+      searchQuery,
+      handleSearch,
+      currentPage,
+      totalPages,
+      displayedPages,
+      changePage,
+      viewResults,
+    };
+  },
+};
+</script>
+
+<style scoped>
+.student-card {
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease;
+}
+
+.student-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.material-icons {
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.search-container {
+  max-width: 400px;
+  margin-left: auto;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-right: none;
+}
+
+.form-control {
+  border-left: none;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: #ced4da;
+}
+
+.material-icons {
+  font-size: 20px;
+  color: #6c757d;
+}
+
+@media (max-width: 576px) {
+  .student-card {
+    margin-bottom: 15px;
   }
-  
-  /* On small screens, make buttons stack vertically with same width */
-  @media (max-width: 767.98px) {
-    .btn {
-      width: 100%;
-    }
-  }
-  
-  /* For better alignment on all screen sizes */
-  .row.text-center > .col-12 {
-    margin-bottom: 10px;
-  }
-  </style>
+}
+</style>
