@@ -3,53 +3,67 @@
     <h2 class="mb-4"><span class="material-icons">assignment</span> Assign Quiz to Students</h2>
     
     <div class="row">
-      <div v-for="student in students" :key="student.id" class="col-12 col-sm-6 col-md-4 mb-4">
+      <div v-for="student in paginatedStudents" :key="student.id" class="col-12 col-sm-6 col-md-4 mb-4">
         <div class="card p-3 mb-2 student-card">
           <h5>{{ student.name }}</h5>
           <p class="mb-1">Email: {{ student.email }}</p>
-          <div class="mb-3">
-            <label for="quizSelect" class="form-label">Select Quiz</label>
-            <select v-model="selectedQuiz[student.id]" class="form-select">
-              <option value="">Choose a quiz</option>
-              <option v-for="quiz in quizzes" :key="quiz.id" :value="quiz.id">
-                {{ quiz.title }}
-              </option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="durationSelect" class="form-label">Select Duration</label>
-            <select v-model="selectedDuration[student.id]" class="form-select">
-              <option value="">Choose duration</option>
-              <option v-for="duration in durations" :key="duration" :value="duration">
-                {{ duration }} minutes
-              </option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="deadline" class="form-label">Deadline</label>
-            <input type="datetime-local" v-model="selectedDeadline[student.id]" class="form-control mb-2">
-          </div>
-          <button class="btn btn-primary" @click="confirmAssign(student.id)" :disabled="!isAssignmentValid(student.id)">
+          <button class="btn btn-primary mt-2" @click="openAssignModal(student)">
             Assign Quiz
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Confirm Modal -->
-    <div v-if="showConfirmModal" class="modal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
+    <!-- Pagination -->
+    <div class="d-flex justify-content-center mt-4">
+      <button class="btn btn-outline-primary me-2" @click="prevPage" :disabled="currentPage === 1">
+        Previous
+      </button>
+      <span class="align-self-center mx-2">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button class="btn btn-outline-primary ms-2" @click="nextPage" :disabled="currentPage === totalPages">
+        Next
+      </button>
+    </div>
+
+    <!-- Assign Quiz Modal -->
+    <div v-if="showAssignModal" class="modal" tabindex="-1" style="display: block; background-color: rgba(0,0,0,0.5);">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Confirm Assignment</h5>
-            <button type="button" class="btn-close" @click="showConfirmModal = false"></button>
+            <h5 class="modal-title">Assign Quiz to {{ selectedStudent.name }}</h5>
+            <button type="button" class="btn-close" @click="closeAssignModal"></button>
           </div>
           <div class="modal-body">
-            <p>Are you sure you want to assign this quiz?</p>
+            <p><strong>Email:</strong> {{ selectedStudent.email }}</p>
+            <p><strong>Phone:</strong> {{ selectedStudent.phone }}</p>
+            <div class="mb-3">
+              <label for="quizSelect" class="form-label">Select Quiz</label>
+              <select v-model="selectedQuiz" class="form-select">
+                <option value="">Choose a quiz</option>
+                <option v-for="quiz in quizzes" :key="quiz.id" :value="quiz.id">
+                  {{ quiz.title }}
+                </option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="durationSelect" class="form-label">Select Duration</label>
+              <select v-model="selectedDuration" class="form-select">
+                <option value="">Choose duration</option>
+                <option v-for="duration in durations" :key="duration" :value="duration">
+                  {{ duration }} minutes
+                </option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="deadline" class="form-label">Deadline</label>
+              <input type="datetime-local" v-model="selectedDeadline" class="form-control">
+            </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="showConfirmModal = false">Cancel</button>
-            <button type="button" class="btn btn-primary" @click="assignQuiz">Confirm</button>
+            <button type="button" class="btn btn-secondary" @click="closeAssignModal">Cancel</button>
+            <button type="button" class="btn btn-success" @click="assignQuiz" :disabled="!isAssignmentValid">
+              Confirm
+            </button>
           </div>
         </div>
       </div>
@@ -61,8 +75,9 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
+import moment from 'moment';
 import SuccessPopupComponent from './SuccessPopup.vue';
 import ErrorPopupComponent from './ErrorPopup.vue';
 
@@ -75,24 +90,38 @@ export default {
   setup() {
     const students = ref([]);
     const quizzes = ref([]);
-    const selectedQuiz = reactive({});
-    const selectedDuration = reactive({});
-    const selectedDeadline = reactive({});
     const showSuccess = ref(false);
     const showError = ref(false);
     const successMessage = ref('');
     const errorMessage = ref('');
-    const showConfirmModal = ref(false);
-    const currentStudentId = ref(null);
+    const showAssignModal = ref(false);
+    const selectedStudent = ref({});
+    const selectedQuiz = ref('');
+    const selectedDuration = ref('');
+    const selectedDeadline = ref(moment().add(1, 'hour').format('YYYY-MM-DDTHH:mm'));
     const durations = [4, 20, 30];
+    const currentPage = ref(1);
+    const itemsPerPage = 12;
+
+    const totalPages = computed(() => Math.ceil(students.value.length / itemsPerPage));
+
+    const paginatedStudents = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      return students.value.slice(start, end);
+    });
+
+    const isAssignmentValid = computed(() => {
+      return selectedQuiz.value && selectedDuration.value && selectedDeadline.value;
+    });
 
     const fetchStudents = async () => {
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/students`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-              'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': 'true',
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
           },
         });
         students.value = response.data.data;
@@ -120,43 +149,61 @@ export default {
       }
     };
 
-    const isAssignmentValid = (studentId) => {
-      return selectedQuiz[studentId] && selectedDuration[studentId] && selectedDeadline[studentId];
+    const openAssignModal = (student) => {
+      selectedStudent.value = student;
+      showAssignModal.value = true;
     };
 
-    const confirmAssign = (studentId) => {
-      currentStudentId.value = studentId;
-      showConfirmModal.value = true;
+    const closeAssignModal = () => {
+      showAssignModal.value = false;
+      selectedQuiz.value = '';
+      selectedDuration.value = '';
+      selectedDeadline.value = '';
     };
 
     const assignQuiz = async () => {
-      const studentId = currentStudentId.value;
+      const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
+      const deadlineTime = moment(selectedDeadline.value).format('YYYY-MM-DD HH:mm:ss');
+
       const data = {
-        quiz_id: selectedQuiz[studentId],
-        assigned_to: studentId,
-        duration: selectedDuration[studentId],
-        deadline_at: new Date(selectedDeadline[studentId]).toISOString(),
+        quiz_id: parseInt(selectedQuiz.value),
+        assigned_to: parseInt(selectedStudent.value.id),
+        duration: parseInt(selectedDuration.value),
+        scheduled_at: currentTime,
+        deadline_at: deadlineTime,
       };
+
+    //   console.log('Sending data:', data);  // Log the data being sent
 
       try {
         const response = await axios.post(`${process.env.VUE_APP_API_URL}/assign-quiz`, data, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
           },
         });
-        successMessage.value = response.data.message || 'Quiz assigned successfully!';
+        successMessage.value = response.data.message || 'Quiz scheduled successfully!';
         showSuccess.value = true;
-        // Reset the form for this student
-        selectedQuiz[studentId] = '';
-        selectedDuration[studentId] = '';
-        selectedDeadline[studentId] = '';
+        closeAssignModal();
       } catch (error) {
         console.error('Error assigning quiz:', error);
+        if (error.response) {
+          console.error('Error response:', error.response.data);  // Log the error response
+          errorMessage.value = error.response.data.message || 'Failed to assign quiz. Please check your input and try again.';
+        } else {
+          errorMessage.value = 'Failed to assign quiz. Please try again later.';
+        }
         showError.value = true;
-        errorMessage.value = 'Failed to assign quiz. Please try again later.';
-      } finally {
-        showConfirmModal.value = false;
       }
+    };
+
+    const prevPage = () => {
+      if (currentPage.value > 1) currentPage.value--;
+    };
+
+    const nextPage = () => {
+      if (currentPage.value < totalPages.value) currentPage.value++;
     };
 
     onMounted(() => {
@@ -165,20 +212,26 @@ export default {
     });
 
     return {
-      students,
+      paginatedStudents,
       quizzes,
-      selectedQuiz,
-      selectedDuration,
-      selectedDeadline,
       showSuccess,
       showError,
       successMessage,
       errorMessage,
-      showConfirmModal,
+      showAssignModal,
+      selectedStudent,
+      selectedQuiz,
+      selectedDuration,
+      selectedDeadline,
       durations,
+      currentPage,
+      totalPages,
       isAssignmentValid,
-      confirmAssign,
+      openAssignModal,
+      closeAssignModal,
       assignQuiz,
+      prevPage,
+      nextPage,
     };
   },
 };
