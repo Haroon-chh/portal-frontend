@@ -2,6 +2,22 @@
   <div class="container mt-4">
     <h2 class="mb-4"><span class="material-icons">assignment</span> Assign Quiz to Students</h2>
     
+    <!-- Search bar -->
+    <div class="mb-4 search-container">
+      <div class="input-group">
+        <span class="input-group-text">
+          <span class="material-icons">search</span>
+        </span>
+        <input 
+          v-model="searchQuery" 
+          @input="handleSearch"
+          type="text" 
+          class="form-control form-control-sm" 
+          placeholder="Search student by name..."
+        >
+      </div>
+    </div>
+    
     <div class="row">
       <div v-for="student in paginatedStudents" :key="student.id" class="col-12 col-sm-6 col-md-4 mb-4">
         <div class="card p-3 mb-2 student-card">
@@ -104,14 +120,28 @@ export default {
     const durations = [4, 20, 30];
     const currentPage = ref(1);
     const itemsPerPage = 12;
+    const searchQuery = ref('');
 
-    const totalPages = computed(() => Math.ceil(students.value.length / itemsPerPage));
+    const filteredStudents = computed(() => {
+      if (searchQuery.value) {
+        return students.value.filter(student => 
+          student.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      }
+      return students.value;
+    });
+
+    const totalPages = computed(() => Math.ceil(filteredStudents.value.length / itemsPerPage));
 
     const paginatedStudents = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage;
       const end = start + itemsPerPage;
-      return students.value.slice(start, end);
+      return filteredStudents.value.slice(start, end);
     });
+
+    const handleSearch = () => {
+      currentPage.value = 1; // Reset to first page when searching
+    };
 
     const isAssignmentValid = computed(() => {
       return selectedQuiz.value && selectedDuration.value && selectedDeadline.value;
@@ -234,6 +264,8 @@ export default {
       assignQuiz,
       prevPage,
       nextPage,
+      searchQuery,
+      handleSearch,
     };
   },
 };
@@ -253,5 +285,29 @@ export default {
 .material-icons {
   vertical-align: middle;
   margin-right: 5px;
+}
+
+.search-container {
+  max-width: 400px;
+  margin-left: auto;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-right: none;
+}
+
+.form-control {
+  border-left: none;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: #ced4da;
+}
+
+.material-icons {
+  font-size: 20px;
+  color: #6c757d;
 }
 </style>
