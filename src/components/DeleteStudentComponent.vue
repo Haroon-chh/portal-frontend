@@ -64,10 +64,10 @@
               </div>
               <div class="modal-footer d-flex justify-content-center">
                 <button @click="deleteStudent" class="btn btn-danger me-2">
-                  <span class="material-icons">delete_forever</span> Yes, Delete
+                  <span class="material-icons text-white">delete_forever</span> Yes, Delete
                 </button>
                 <button @click="showConfirm = false" class="btn btn-secondary">
-                  <span class="material-icons">cancel</span> Cancel
+                  <span class="material-icons text-white">cancel</span> Cancel
                 </button>
               </div>
             </div>
