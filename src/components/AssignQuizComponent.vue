@@ -7,9 +7,11 @@
         <div class="card p-3 mb-2 student-card">
           <h5>{{ student.name }}</h5>
           <p class="mb-1">Email: {{ student.email }}</p>
-          <button class="btn btn-primary mt-2" @click="openAssignModal(student)">
-            Assign Quiz
-          </button>
+          <div class="text-center">
+            <button class="btn btn-primary btn-md" @click="openAssignModal(student)">
+              Assign Quiz
+            </button>
+          </div>
         </div>
       </div>
     </div>
