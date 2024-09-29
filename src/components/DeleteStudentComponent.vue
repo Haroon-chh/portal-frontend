@@ -1,9 +1,25 @@
 <template>
     <div>
-      <h2 class="mb-4">Delete Student</h2>
+      <h2 class="mb-4"><span class="material-icons">school</span> Delete Student</h2>
+      
+      <!-- Search bar -->
+      <div class="mb-4 search-container">
+        <div class="input-group">
+          <span class="input-group-text">
+            <span class="material-icons">search</span>
+          </span>
+          <input 
+            v-model="searchQuery" 
+            @input="handleSearch"
+            type="text" 
+            class="form-control form-control-sm" 
+            placeholder="Search student by name..."
+          >
+        </div>
+      </div>
       
       <div class="row">
-        <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="student in students" :key="student.id">
+        <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="student in filteredStudents" :key="student.id">
           <div class="card p-3 mb-2 student-card">
             <h5>{{ student.name }}</h5>
             <p class="mb-1">Email: {{ student.email }}</p>
@@ -63,7 +79,7 @@
   
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import SuccessPopupComponent from './SuccessPopup.vue';
 import ErrorPopupComponent from './ErrorPopup.vue';
@@ -83,8 +99,23 @@ export default {
     const errorMessage = ref('');
     const showConfirm = ref(false);
     const studentIdToDelete = ref(null);
+    const searchQuery = ref('');
 
-    const fetchStudents = async (page = 1) => {
+    const filteredStudents = computed(() => {
+      if (searchQuery.value) {
+        return students.value.filter(student => 
+          student.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      }
+      return students.value;
+    });
+
+    const handleSearch = () => {
+      // If you want to trigger a new API call when searching, uncomment the next line
+      // fetchStudents(1, searchQuery.value);
+    };
+
+    const fetchStudents = async (page = 1, search = '') => {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
@@ -92,7 +123,11 @@ export default {
           return;
         }
 
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/students?page=${page}`, {
+        const response = await axios.get(`${process.env.VUE_APP_API_URL}/students`, {
+          params: {
+            page: page,
+            search: search
+          },
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
@@ -145,7 +180,7 @@ export default {
             successMessage.value = '';
           }, 3000);
           // Refresh the student list
-          fetchStudents(pagination.value.current_page);
+          fetchStudents(pagination.value.current_page, searchQuery.value);
         }
       } catch (error) {
         console.error('Error deleting student:', error);
@@ -166,6 +201,7 @@ export default {
 
     return {
       students,
+      filteredStudents,
       pagination,
       showSuccess,
       showError,
@@ -175,6 +211,8 @@ export default {
       confirmDelete,
       deleteStudent,
       fetchStudents,
+      searchQuery,
+      handleSearch,
     };
   },
 };
@@ -206,8 +244,6 @@ export default {
   z-index: 1000;
 }
 
-
-
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s;
 }
@@ -230,5 +266,29 @@ export default {
   .student-card {
     margin-bottom: 15px;
   }
+}
+
+.search-container {
+  max-width: 400px;
+  margin-left: auto;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-right: none;
+}
+
+.form-control {
+  border-left: none;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: #ced4da;
+}
+
+.material-icons {
+  font-size: 20px;
+  color: #6c757d;
 }
 </style>
