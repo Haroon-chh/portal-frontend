@@ -15,7 +15,7 @@
 
       <!-- Admin-specific options -->
       <template v-if="authUserRole === 'admin'">
-        <router-link to="/dashboard/add-manager" class="menu-item">
+        <router-link to="/add-manager" class="menu-item">
           <span class="material-icons">person_add</span>
           <span v-if="isExpanded" class="text">Add Manager</span>
         </router-link>

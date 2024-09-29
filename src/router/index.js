@@ -5,6 +5,7 @@ import DashboardView from '../views/DashboardView.vue';
 import ResetPasswordView from '../views/ResetPasswordView.vue';
 import ForgotPasswordView from '../views/ForgotPasswordView.vue';
 import StudentResultView from '../views/StudentResultView.vue';
+import AddManagerView from '../views/AddManagerView.vue';
 import RouteGuard from '../services/RouteGuard'; // Import the RouteGuard
 
 const routes = [
@@ -48,6 +49,12 @@ const routes = [
     component: StudentResultView,
     meta: { title: 'Student Result', requiresAuth: true, roles: ['admin'] }
   },
+  {
+    path: '/add-manager',
+    name: 'AddManager',
+    component: AddManagerView,
+    meta: { title: 'Add Manager', requiresAuth: true, roles: ['admin'] }
+  }
 ];
 
 const router = createRouter({
