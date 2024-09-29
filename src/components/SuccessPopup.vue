@@ -28,7 +28,7 @@
     border: 1px solid #c3e6cb;
     border-radius: 4px;
     padding: 10px 20px;
-    z-index: 1000;
+    z-index: 10000;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
   

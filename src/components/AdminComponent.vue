@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="applications-container">
     <h2>Welcome Admin</h2>
     <!-- Display ApplicationsComponent -->
     <ApplicationsComponent />
@@ -17,3 +17,9 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.applications-container {
+  margin-left: 5%;
+}
+</style>

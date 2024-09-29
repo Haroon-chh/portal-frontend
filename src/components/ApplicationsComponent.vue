@@ -1,101 +1,66 @@
 <template>
-    <div class="container mt-4">
-      <h2 class="text-center">Student Applications</h2>
-  
-      <!-- Cards for Applications -->
-      <div class="row">
-        <div class="col-md-12" v-if="filteredApplications.length">
-          <div class="card mb-3" v-for="application in filteredApplications" :key="application.id">
-            <div class="card-body d-flex flex-column justify-content-between">
-              <!-- Headers and Data -->
-              <div class="row text-center">
-                <div class="col-12 col-md-4">
-                  <strong>Name</strong>
-                  <div>{{ application.name }}</div>
-                </div>
-                <div class="col-12 col-md-4">
-                  <strong>Email</strong>
-                  <div>{{ application.email }}</div>
-                </div>
-                <div class="col-12 col-md-4">
-                  <strong>Phone</strong>
-                  <div>{{ application.phone }}</div>
-                </div>
-              </div>
-  
-              <!-- Action Buttons with Same Width -->
-              <div class="d-flex justify-content-center mt-3 gap-3 flex-column flex-md-row">
-                <a :href="application.attachment" target="_blank" class="btn btn-primary btn-equal">View Attachment</a>
-                <button
-                  class="btn btn-success btn-equal"
-                  @click="acceptApplication(application.id)"
-                  :disabled="application.accepted"
-                >
-                  {{ application.accepted ? 'Accepted' : 'Accept' }}
-                </button>
-              </div>
-            </div>
+  <div>
+    <h2 class="mb-4">Student Applications</h2>
+    <div class="mb-3">
+      <input v-model="searchTerm" @input="searchApplications" class="form-control" type="text" placeholder="Search applications...">
+    </div>
+    <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    
+    <div class="card-columns">
+      <div v-for="application in applications" :key="application.id" class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">{{ application.name }}</h5>
+          <p class="card-text">Email: {{ application.email }}</p>
+          <p class="card-text">Phone: {{ application.phone }}</p>
+          <div class="d-flex gap-1 justify-content-center">
+            <button @click="viewCV(application.id)" class="btn btn-primary">View CV</button>
+            <button @click="acceptApplication(application.id)" class="btn btn-success">Accept</button>
+            <button @click="rejectApplication(application.id)" class="btn btn-danger">Reject</button>
           </div>
         </div>
-        <p v-else>No applications found.</p>
       </div>
-  
-      <!-- Pagination -->
-      <nav v-if="pagination.links && pagination.links.length > 3">
-        <ul class="pagination justify-content-center">
-          <li
-            v-for="link in pagination.links"
-            :key="link.label"
-            :class="['page-item', { active: link.active, disabled: !link.url }]"
-          >
-            <a
-              class="page-link"
-              href="#"
-              @click.prevent="link.url && fetchApplications(link.url)"
-              v-html="link.label"
-            ></a>
-          </li>
-        </ul>
-      </nav>
-  
-      <!-- Popup Components for Success and Error Messages -->
-      <ErrorPopup v-if="errorMessage" :message="errorMessage" @close="clearErrorMessage" />
-      <SuccessPop v-if="showSuccessPopup" :message="successMessage" @close="clearSuccessMessage" />
     </div>
-  </template>
-  
-  
-  
-  
-  <script>
-// Import ErrorPopup and SuccessPop components
+
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+        <li class="page-item" :class="{ disabled: !pagination.prev_page_url }">
+          <a class="page-link" href="#" @click.prevent="fetchApplications(pagination.prev_page_url)">Previous</a>
+        </li>
+        <li class="page-item" v-for="link in pagination.links" :key="link.label" :class="{ active: link.active, disabled: !link.url }">
+          <a class="page-link" href="#" @click.prevent="fetchApplications(link.url)" v-html="link.label"></a>
+        </li>
+        <li class="page-item" :class="{ disabled: !pagination.next_page_url }">
+          <a class="page-link" href="#" @click.prevent="fetchApplications(pagination.next_page_url)">Next</a>
+        </li>
+      </ul>
+    </nav>
+
+    <AcceptPopup v-if="showSuccessPopup" :message="successMessage" @close="showSuccessPopup = false" />
+    <ErrorPopup v-if="showErrorPopup" :message="errorMessage" @close="showErrorPopup = false" />
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+import AcceptPopup from '../components/SuccessPopup.vue';
 import ErrorPopup from '../components/ErrorPopup.vue';
-import SuccessPop from '../components/SuccessPopup.vue';
 
 export default {
   components: {
+    AcceptPopup,
     ErrorPopup,
-    SuccessPop,
   },
   data() {
     return {
       applications: [],
       pagination: {},
-      errorMessage: '', // Holds error message for ErrorPopup
-      successMessage: '', // Holds success message for SuccessPop
+      errorMessage: '',
+      successMessage: '',
       showSuccessPopup: false,
+      showErrorPopup: false,
     };
   },
-  computed: {
-    filteredApplications() {
-      return this.applications.filter((application) => application.accepted === 0);
-    },
-  },
-  mounted() {
-    this.fetchApplications();
-  },
   methods: {
-    // Fetch applications from the API
     async fetchApplications(url = null) {
       try {
         const accessToken = localStorage.getItem('access_token');
@@ -106,29 +71,28 @@ export default {
 
         const apiUrl = url || `${process.env.VUE_APP_API_URL}/applications`;
 
-        const response = await fetch(apiUrl, {
+        const response = await axios.get(apiUrl, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true', // remove this when not using ngrok
+            'ngrok-skip-browser-warning': 'true',
           },
         });
 
-        if (!response.ok) {
-          const errorBody = await response.text();
-          throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
-        }
-
-        const data = await response.json();
-        this.applications = Array.isArray(data.data.data) ? data.data.data : [];
-        this.pagination = data.data;
+        this.applications = response.data.data.data || [];
+        this.pagination = response.data.data;
       } catch (error) {
         this.errorMessage = `Error fetching applications: ${error.message}`;
+        this.showErrorPopup = true;
         console.error('Error:', error);
       }
     },
-
-    // Accept application and handle response with SuccessPop and ErrorPopup
+    async viewCV(applicationId) {
+      const application = this.applications.find(app => app.id === applicationId);
+      if (application && application.attachment) {
+        window.open(application.attachment, '_blank');
+      }
+    },
     async acceptApplication(applicationId) {
       try {
         const accessToken = localStorage.getItem('access_token');
@@ -137,71 +101,67 @@ export default {
           return;
         }
 
-        const response = await fetch(`${process.env.VUE_APP_API_URL}/accept-application/${applicationId}`, {
-          method: 'POST', // Changed to POST
+        const apiUrl = `${process.env.VUE_APP_API_URL}/accept-application/${applicationId}`;
+
+        const response = await axios.post(apiUrl, {}, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
         });
 
-        if (!response.ok) {
-          const errorBody = await response.text();
-          throw new Error(`HTTP error! status: ${response.status} - ${errorBody}`);
-        }
-
-        const data = await response.json();
-        this.successMessage = data.message;
+        this.successMessage = response.data.message;
         this.showSuccessPopup = true;
-        
-        // Update the local state instead of refetching
-        const index = this.applications.findIndex(app => app.id === applicationId);
-        if (index !== -1) {
-          this.applications[index].accepted = 1;
-        }
+        this.fetchApplications();
       } catch (error) {
         this.errorMessage = `Error accepting application: ${error.message}`;
+        this.showErrorPopup = true;
         console.error('Error:', error);
       }
     },
+    async rejectApplication(applicationId) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          console.error('No access token found');
+          return;
+        }
 
-    clearErrorMessage() {
-      this.errorMessage = '';
-    },
+        const apiUrl = `${process.env.VUE_APP_API_URL}/reject-application/${applicationId}`;
 
-    clearSuccessMessage() {
-      this.showSuccessPopup = false;
+        const response = await axios.post(apiUrl, {}, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        this.successMessage = response.data.message;
+        this.showSuccessPopup = true;
+        this.fetchApplications();
+      } catch (error) {
+        this.errorMessage = `Error rejecting application: ${error.message}`;
+        this.showErrorPopup = true;
+        console.error('Error:', error);
+      }
     },
+  },
+  created() {
+    this.fetchApplications();
   },
 };
 </script>
 
-  
 <style scoped>
-/* Ensure container adjusts well for mobile devices */
-.container {
-  margin-top: 20px;
+.card-columns {
+  column-count: 3;
 }
-
-/* Button equal size */
-.btn-equal {
-  min-width: 150px; /* Same min-width for both buttons */
-  text-align: center;
-}
-
-/* On small screens, make buttons stack vertically with same width */
-@media (max-width: 767.98px) {
-  .btn {
-    width: 100%;
-  }
-
-  .btn-equal + .btn-equal {
-    margin-top: 10px;
+@media (max-width: 768px) {
+  .card-columns {
+    column-count: 1;
   }
 }
-
-/* For better alignment on all screen sizes */
-.row.text-center > .col-12 {
-  margin-bottom: 10px;
+.pagination {
+  justify-content: center;
 }
 </style>
