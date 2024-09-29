@@ -40,7 +40,6 @@
 
   .header-content {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     height: 100%;
     padding: 0 20px;
@@ -51,6 +50,7 @@
     color: rgb(232, 243, 233);
     margin: 0;
     flex-grow: 1;
+    margin-left: 7%;
   }
 
   .profile-component {
@@ -63,13 +63,11 @@
     }
 
     .header-content {
-      flex-direction: column;
       justify-content: center;
+      align-items: center;
+      vertical-align: middle;
     }
 
-    h1 {
-      margin-bottom: 10px;
-    }
 
     .profile-component {
       margin-left: 0;

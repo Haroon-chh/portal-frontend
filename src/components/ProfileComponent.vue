@@ -128,4 +128,48 @@ export default {
 .profile-dropdown a:hover {
   background-color: #f8f9fa;
 }
+@media (max-width: 768px) {
+  .profile-container {
+    margin-right: 10px;
+  }
+
+  .profile-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9em;
+  }
+
+  .profile-dropdown {
+    right: 5%;
+    min-width: 120px;
+  }
+
+  .profile-dropdown a {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-container {
+    margin-right: 5px;
+  }
+
+  .profile-circle {
+    width: 35px;
+    height: 35px;
+    font-size: 0.8em;
+  }
+
+  .profile-dropdown {
+    right: 2%;
+    min-width: 100px;
+  }
+
+  .profile-dropdown a {
+    padding: 4px 8px;
+    font-size: 0.8em;
+  }
+}
+
 </style>
