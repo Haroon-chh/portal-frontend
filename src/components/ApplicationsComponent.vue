@@ -21,16 +21,17 @@
       </div>
     </div>
 
-    <nav aria-label="Page navigation">
-      <ul class="pagination">
-        <li class="page-item" :class="{ disabled: !pagination.prev_page_url }">
-          <a class="page-link" href="#" @click.prevent="fetchApplications(pagination.prev_page_url)">Previous</a>
+    <!-- Updated Pagination -->
+    <nav aria-label="Page navigation" v-if="pagination.last_page > 1">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+          <a class="page-link" href="#" @click.prevent="fetchApplications(pagination.current_page - 1)">Previous</a>
         </li>
-        <li class="page-item" v-for="link in pagination.links" :key="link.label" :class="{ active: link.active, disabled: !link.url }">
-          <a class="page-link" href="#" @click.prevent="fetchApplications(link.url)" v-html="link.label"></a>
+        <li class="page-item" v-for="page in displayedPages" :key="page" :class="{ active: page === pagination.current_page }">
+          <a class="page-link" href="#" @click.prevent="page === '...' ? null : fetchApplications(page)">{{ page }}</a>
         </li>
-        <li class="page-item" :class="{ disabled: !pagination.next_page_url }">
-          <a class="page-link" href="#" @click.prevent="fetchApplications(pagination.next_page_url)">Next</a>
+        <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
+          <a class="page-link" href="#" @click.prevent="fetchApplications(pagination.current_page + 1)">Next</a>
         </li>
       </ul>
     </nav>
@@ -41,7 +42,7 @@
 </template>
 
 <script>
-import { ref, defineComponent, onMounted } from 'vue';
+import { ref, defineComponent, onMounted, computed } from 'vue';
 import axios from 'axios';
 import SuccessPopup from '../components/SuccessPopup.vue';
 import ErrorPopup from '../components/ErrorPopup.vue';
@@ -60,7 +61,39 @@ export default defineComponent({
     const successMessage = ref('');
     const errorMessage = ref('');
 
-    const fetchApplications = async (url = null) => {
+    const displayedPages = computed(() => {
+      const current = pagination.value.current_page;
+      const last = pagination.value.last_page;
+      const range = [];
+
+      if (last <= 7) {
+        for (let i = 1; i <= last; i++) {
+          range.push(i);
+        }
+      } else {
+        if (current <= 4) {
+          for (let i = 1; i <= 5; i++) {
+            range.push(i);
+          }
+          range.push('...', last);
+        } else if (current >= last - 3) {
+          range.push(1, '...');
+          for (let i = last - 4; i <= last; i++) {
+            range.push(i);
+          }
+        } else {
+          range.push(1, '...');
+          for (let i = current - 1; i <= current + 1; i++) {
+            range.push(i);
+          }
+          range.push('...', last);
+        }
+      }
+
+      return range;
+    });
+
+    const fetchApplications = async (page = 1) => {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
@@ -68,7 +101,7 @@ export default defineComponent({
           return;
         }
 
-        const apiUrl = url || `${process.env.VUE_APP_API_URL}/applications`;
+        const apiUrl = `${process.env.VUE_APP_API_URL}/applications?page=${page}`;
 
         const response = await axios.get(apiUrl, {
           headers: {
@@ -85,10 +118,44 @@ export default defineComponent({
       }
     };
 
-    const viewCV = (applicationId) => {
-      const application = applications.value.find(app => app.id === applicationId);
-      if (application && application.attachment) {
-        window.open(application.attachment, '_blank');
+    const viewCV = async (applicationId) => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          console.error('No access token found');
+          return;
+        }
+
+        const application = applications.value.find(app => app.id === applicationId);
+        if (application && application.attachment) {
+          const filename = application.attachment.split('/').pop();
+          const apiUrl = `${process.env.VUE_APP_API_URL}/attachment?filename=${filename}`;
+
+          const response = await axios.get(apiUrl, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': 'true',
+            },
+            responseType: 'blob', // Important: This tells axios to treat the response as binary data
+          });
+
+          // Create a Blob from the response data
+          const blob = new Blob([response.data], { type: response.headers['content-type'] });
+
+          // Create a link element and trigger the download
+          const link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.target = '_blank';
+          link.click();
+
+          // Clean up
+          window.URL.revokeObjectURL(link.href);
+        } else {
+          console.error('Application or attachment not found');
+        }
+      } catch (error) {
+        handleError(error, 'Error viewing CV');
       }
     };
 
@@ -179,6 +246,7 @@ export default defineComponent({
       viewCV,
       acceptApplication,
       rejectApplication,
+      displayedPages,
     };
   },
 });
