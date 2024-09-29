@@ -31,7 +31,7 @@
           <span class="material-icons">bar_chart</span>
           <span v-if="isExpanded" class="text">View Results</span>
         </router-link>
-        <router-link to="/dashboard/assign-quizzes" class="menu-item">
+        <router-link to="/assign-quiz" class="menu-item">
           <span class="material-icons">quiz</span>
           <span v-if="isExpanded" class="text">Assign Quizzes</span>
         </router-link>

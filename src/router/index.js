@@ -7,6 +7,7 @@ import ForgotPasswordView from '../views/ForgotPasswordView.vue';
 import StudentResultView from '../views/StudentResultView.vue';
 import AddStaffView from '../views/AddStaffView.vue';
 import DeleteUserView from '../views/DeleteUserView.vue';
+import AssignQuizView from '../views/AssignQuizView.vue';
 import RouteGuard from '../services/RouteGuard'; // Import the RouteGuard
 
 const routes = [
@@ -61,7 +62,13 @@ const routes = [
     name: 'DeleteUser',
     component: DeleteUserView,
     meta: { title: 'Delete User', requiresAuth: true, roles: ['admin'] }
-  }
+  },
+  {
+    path: '/assign-quiz',
+    name: 'AssignQuiz',
+    component: AssignQuizView,
+    meta: { title: 'Assign Quiz', requiresAuth: true, roles: ['admin'] }
+  },
 ];
 
 const router = createRouter({

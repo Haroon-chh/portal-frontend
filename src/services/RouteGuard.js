@@ -2,7 +2,7 @@ import store from "../store/index";
 
 const RouteGuard = (to, from, next) => {
   const publicPages = ['/login', '/registration', '/forgot-password', '/reset-password'];
-  const adminPages = ['/dashboard','/view-results', '/add-staff', '/delete-user'];
+  const adminPages = ['/dashboard','/view-results', '/add-staff', '/delete-user', '/assign-quiz'];
   const studentPages = ['/dashboard', '/view-grades', '/submit-assignments'];
   const managerPages = ['/dashboard', '/view-reports', '/manage-staff'];
 
