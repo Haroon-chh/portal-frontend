@@ -7,22 +7,17 @@
           <div class="form-wrapper">
             <AddManagerComponent />
           </div>
-          <div class="form-wrapper">
-            <AddSupervisorComponent />
-          </div>
         </div>
     </div>
 </template>
 
 <script>
-import AddManagerComponent from '@/components/AddManagerComponent.vue';
-import AddSupervisorComponent from '@/components/AddSupervisorComponent.vue';
+import AddManagerComponent from '@/components/AddStaffComponent.vue';
 
 export default {
     name: 'AddFormsView',
     components: {
-        AddManagerComponent,
-        AddSupervisorComponent
+        AddManagerComponent
     },
     methods: {
         goBack() {
@@ -47,9 +42,7 @@ export default {
 
 .add-forms-container {
     display: flex;
-    flex-direction: row;
     justify-content: center;
-    gap: 2rem;
     width: 100%;
 }
 
@@ -57,21 +50,13 @@ export default {
     flex: 1;
     max-width: 600px;
     padding: 1.5rem;
-    border: 1px solid #5c7bd1;
-    border-radius: 8px;
-    background-color: #8093a9;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: #266084cb;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 @media (max-width: 991.98px) {
-    .add-forms-container {
-        flex-direction: column;
-        align-items: center;
-    }
-
     .form-wrapper {
         width: 100%;
-        margin-bottom: 2rem;
     }
 }
 </style>

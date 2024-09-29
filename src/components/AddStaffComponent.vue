@@ -2,24 +2,35 @@
     <div class="container mt-5">
       <h2 class="mb-4 text-center">
         <span class="material-icons">person_add</span>
-        Add Manager</h2>
+        Add Manager/Supervisor
+      </h2>
       
       <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
   
-      <form @submit.prevent="addManager" class="p-4 border rounded shadow-sm form-body">
+      <form @submit.prevent="addPerson" class="p-4 border rounded shadow-sm form-body">
         <div class="form-group mb-4 position-relative">
           <span class="material-icons form-icon">person</span>
           <label for="name" class="form-label">Name</label>
-          <input v-model="manager.name" id="name" type="text" class="form-control pl-5" placeholder="Enter name" required>
+          <input v-model="person.name" id="name" type="text" class="form-control pl-5" placeholder="Enter name" required>
         </div>
   
         <div class="form-group mb-4 position-relative">
           <span class="material-icons form-icon">email</span>
           <label for="email" class="form-label">Email</label>
-          <input v-model="manager.email" id="email" type="email" class="form-control pl-5" placeholder="Enter email" required>
+          <input v-model="person.email" id="email" type="email" class="form-control pl-5" placeholder="Enter email" required>
         </div>
   
-        <button type="submit" class="btn btn-primary w-100">Add Manager</button>
+        <div class="form-group mb-4 position-relative">
+          <span class="material-icons form-icon">work</span>
+          <label for="role" class="form-label">Role</label>
+          <select v-model="person.role" id="role" class="form-control pl-5" required>
+            <option value="">Select a role</option>
+            <option value="manager">Manager</option>
+            <option value="supervisor">Supervisor</option>
+          </select>
+        </div>
+  
+        <button type="submit" class="btn btn-primary w-100">Add Person</button>
       </form>
   
       <SuccessPopupComponent :show="showSuccess" :message="successMessage" />
@@ -36,9 +47,10 @@
   const SuccessPopupComponent = defineComponent(SuccessPopup);
   const ErrorPopupComponent = defineComponent(ErrorPopup);
 
-  const manager = ref({
+  const person = ref({
     name: '',
     email: '',
+    role: '',
   });
 
   const showSuccess = ref(false);
@@ -47,11 +59,12 @@
   const errorMessage = ref('');
 
   const clearForm = () => {
-    manager.value.name = '';
-    manager.value.email = '';
+    person.value.name = '';
+    person.value.email = '';
+    person.value.role = '';
   };
 
-  const addManager = async () => {
+  const addPerson = async () => {
     try {
       const accessToken = localStorage.getItem('access_token');
       if (!accessToken) {
@@ -59,9 +72,19 @@
         return;
       }
 
-      const apiUrl = `${process.env.VUE_APP_API_URL}/add-manager`;
+      let apiUrl;
+      if (person.value.role === 'manager') {
+        apiUrl = `${process.env.VUE_APP_API_URL}/add-manager`;
+      } else if (person.value.role === 'supervisor') {
+        apiUrl = `${process.env.VUE_APP_API_URL}/add-supervisor`;
+      } else {
+        throw new Error('Invalid role selected');
+      }
 
-      const response = await axios.post(apiUrl, manager.value, {
+      const response = await axios.post(apiUrl, {
+        name: person.value.name,
+        email: person.value.email,
+      }, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
@@ -80,7 +103,7 @@
         throw new Error('Unexpected response format');
       }
     } catch (error) {
-      console.error('Error adding manager:', error);
+      console.error('Error adding person:', error);
       if (error.response && error.response.status === 400) {
         const validationErrors = error.response.data["validation errors"];
         if (validationErrors && validationErrors.email) {
@@ -143,5 +166,15 @@
   
   .form-control:focus {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+  
+  select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%23888' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 8px 8px;
   }
   </style>

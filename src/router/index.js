@@ -5,7 +5,7 @@ import DashboardView from '../views/DashboardView.vue';
 import ResetPasswordView from '../views/ResetPasswordView.vue';
 import ForgotPasswordView from '../views/ForgotPasswordView.vue';
 import StudentResultView from '../views/StudentResultView.vue';
-import AddManagerView from '../views/AddManagerView.vue';
+import AddStaffView from '../views/AddStaffView.vue';
 import RouteGuard from '../services/RouteGuard'; // Import the RouteGuard
 
 const routes = [
@@ -50,9 +50,9 @@ const routes = [
     meta: { title: 'Student Result', requiresAuth: true, roles: ['admin'] }
   },
   {
-    path: '/add-manager',
-    name: 'AddManager',
-    component: AddManagerView,
+    path: '/add-staff',
+    name: 'AddStaff',
+    component: AddStaffView,
     meta: { title: 'Add Manager', requiresAuth: true, roles: ['admin'] }
   }
 ];
