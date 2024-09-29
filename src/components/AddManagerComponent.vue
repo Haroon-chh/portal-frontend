@@ -20,73 +20,76 @@
         <button type="submit" class="btn btn-primary w-100">Add Manager</button>
       </form>
   
-      <AcceptPopup v-if="showSuccessPopup" :message="successMessage" @close="showSuccessPopup = false" />
-      <ErrorPopup v-if="showErrorPopup" :message="errorMessage" @close="showErrorPopup = false" />
+      <SuccessPopupComponent :show="showSuccess" :message="successMessage" />
+      <ErrorPopupComponent :show="showError" :message="errorMessage" />
     </div>
   </template>
   
-  <script>
+  <script setup>
+  import { ref, defineComponent } from 'vue';
   import axios from 'axios';
-  import AcceptPopup from '../components/SuccessPopup.vue';
-  import ErrorPopup from '../components/ErrorPopup.vue';
-  
-  export default {
-    components: {
-      AcceptPopup,
-      ErrorPopup,
-    },
-    data() {
-      return {
-        manager: {
-          name: '',
-          email: '',
+  import SuccessPopup from './SuccessPopup.vue';
+  import ErrorPopup from './ErrorPopup.vue';
+
+  const SuccessPopupComponent = defineComponent(SuccessPopup);
+  const ErrorPopupComponent = defineComponent(ErrorPopup);
+
+  const manager = ref({
+    name: '',
+    email: '',
+  });
+
+  const showSuccess = ref(false);
+  const showError = ref(false);
+  const successMessage = ref('');
+  const errorMessage = ref('');
+
+  const addManager = async () => {
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('No access token found');
+        return;
+      }
+
+      const apiUrl = `${process.env.VUE_APP_API_URL}/add-manager`;
+
+      const response = await axios.post(apiUrl, manager.value, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
         },
-        successMessage: '',
-        errorMessage: '',
-        showSuccessPopup: false,
-        showErrorPopup: false,
-      };
-    },
-    methods: {
-      async addManager() {
-        try {
-          const accessToken = localStorage.getItem('access_token');
-          if (!accessToken) {
-            console.error('No access token found');
-            return;
-          }
-  
-          const apiUrl = `${process.env.VUE_APP_API_URL}/add-manager`;
-  
-          const response = await axios.post(apiUrl, this.manager, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          });
-  
-          if (response.status === 200) {
-            this.successMessage = response.data.message;
-            this.showSuccessPopup = true;
-            this.manager.name = '';
-            this.manager.email = '';
-          }
-        } catch (error) {
-          if (error.response && error.response.status === 400) {
-            const validationErrors = error.response.data["validation errors"];
-            if (validationErrors && validationErrors.email) {
-              this.errorMessage = validationErrors.email[0];
-            } else {
-              this.errorMessage = `Error: ${error.message}`;
-            }
-          } else {
-            this.errorMessage = `Error: ${error.message}`;
-          }
-          this.showErrorPopup = true;
-          console.error('Error:', error);
+      });
+
+      if (response.status === 200 && response.data) {
+        successMessage.value = response.data.message;
+        showSuccess.value = true;
+        manager.value.name = '';
+        manager.value.email = '';
+
+        setTimeout(() => {
+          showSuccess.value = false;
+        }, 5000);
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      console.error('Error adding manager:', error);
+      if (error.response && error.response.status === 400) {
+        const validationErrors = error.response.data["validation errors"];
+        if (validationErrors && validationErrors.email) {
+          errorMessage.value = validationErrors.email[0];
+        } else {
+          errorMessage.value = `Error: ${error.message}`;
         }
-      },
-    },
+      } else {
+        errorMessage.value = `Error: ${error.message}`;
+      }
+      showError.value = true;
+      setTimeout(() => {
+        showError.value = false;
+      }, 5000);
+    }
   };
   </script>
   
@@ -103,7 +106,7 @@
   @keyframes slideDown {
     from {
       opacity: 0;
-      transform: translateY(-20px);
+      transform: translateY(-50px);
     }
     to {
       opacity: 1;
@@ -121,7 +124,7 @@
   
   .form-icon {
     position: absolute;
-    top: 50%;
+    top: 70%;
     left: 10px;
     transform: translateY(-50%);
     color: #888;
@@ -135,4 +138,3 @@
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
   }
   </style>
-  
