@@ -115,18 +115,24 @@ export default {
             quizzes.value = response.data.data;
           } else {
             console.error('Unexpected quizzes data format:', response.data.data);
-            showError.value = true;
-            errorMessage.value = 'Received unexpected quiz data format. Please try again later.';
+            setTimeout(() => {
+              showError.value = true;
+              errorMessage.value = 'Received unexpected quiz data format. Please try again later.';
+            }, 1000);
           }
         } else {
           console.error('No quizzes data in the response:', response.data);
-          showError.value = true;
-          errorMessage.value = 'No quiz data received. Please try again later.';
+          setTimeout(() => {
+            showError.value = true;
+            errorMessage.value = 'No quiz data received. Please try again later.';
+          }, 1000);
         }
       } catch (error) {
         console.error('Error fetching quizzes:', error);
-        showError.value = true;
-        errorMessage.value = 'Failed to fetch quiz details. Please try again later.';
+        setTimeout(() => {
+          showError.value = true;
+          errorMessage.value = 'Failed to fetch quiz details. Please try again later.';
+        }, 1000);
       }
     };
 
