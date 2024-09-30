@@ -3,8 +3,8 @@
     <Header title="Dashboard" />
   </div>
   <div class="content">
-    <component :is="getComponentByRole()" />
-    <router-view></router-view>
+    <component :is="getComponentByRole()" v-if="!isAttemptQuizRoute" />
+    <router-view v-if="isAttemptQuizRoute"></router-view>
   </div>
 </template>
 
@@ -29,6 +29,11 @@ export default {
   },
   mounted() {
     this.fetchUserRole();
+  },
+  computed: {
+    isAttemptQuizRoute() {
+      return this.$route.name === 'AttemptQuiz';
+    }
   },
   methods: {
     fetchUserRole() {
@@ -66,8 +71,20 @@ export default {
   margin-bottom: 5%;
 }
 .content {
-  margin-top: 5%;
+  padding: 20px;
+  margin-left: 2%;
+  margin-top: 60px; /* Adjust based on your header height */
 }
+
+/* Media queries for mobile view */
+@media screen and (max-width: 768px) {
+  .content {
+    padding: 10px;
+    margin-left: 0;
+    margin-top: 40px;
+  }
+}
+
 @media (max-width: 1200px) {
   .header {
     margin-bottom: 13%;
