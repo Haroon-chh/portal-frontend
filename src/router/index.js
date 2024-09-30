@@ -8,6 +8,7 @@ import StudentResultView from '../views/StudentResultView.vue';
 import AddStaffView from '../views/AddStaffView.vue';
 import DeleteUserView from '../views/DeleteUserView.vue';
 import AssignQuizView from '../views/AssignQuizView.vue';
+import AttemptQuizView from '../views/AttemptQuizView.vue';
 import RouteGuard from '../services/RouteGuard'; // Import the RouteGuard
 
 const routes = [
@@ -31,7 +32,16 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { title: 'Dashboard', requiresAuth: true }
+    meta: { title: 'Dashboard', requiresAuth: true },
+    children: [
+      {
+        path: 'attempt-quiz/:quizId',
+        name: 'AttemptQuiz',
+        component: AttemptQuizView,
+        meta: { title: 'Attempt Quiz', requiresAuth: true, roles: ['student'] },
+        props: true // This allows route params to be passed as props
+      }
+    ]
   },
   {
     path: '/reset-password',

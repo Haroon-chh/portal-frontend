@@ -2,8 +2,8 @@ import store from "../store/index";
 
 const RouteGuard = (to, from, next) => {
   const publicPages = ['/login', '/registration', '/forgot-password', '/reset-password'];
-  const adminPages = ['/dashboard','/view-results', '/add-staff', '/delete-user', '/assign-quiz'];
-  const studentPages = ['/dashboard', '/view-grades', '/submit-assignments'];
+  const adminPages = ['/dashboard', '/view-results', '/add-staff', '/delete-user', '/assign-quiz'];
+  const studentPages = ['/dashboard', '/view-grades', '/submit-assignments', '/dashboard/attempt-quiz'];
   const managerPages = ['/dashboard', '/view-reports', '/manage-staff'];
 
   const authRequired = !publicPages.includes(to.path);
@@ -21,11 +21,11 @@ const RouteGuard = (to, from, next) => {
 
   // Role-based access control
   if (userRole) {
-    if (userRole === 'admin' && !adminPages.includes(to.path)) {
+    if (userRole === 'admin' && !adminPages.includes(to.path) && !to.path.startsWith('/dashboard/')) {
       return next('/dashboard');
-    } else if (userRole === 'student' && !studentPages.includes(to.path)) {
+    } else if (userRole === 'student' && !studentPages.includes(to.path) && !to.path.startsWith('/dashboard/attempt-quiz')) {
       return next('/dashboard');
-    } else if (userRole === 'manager' && !managerPages.includes(to.path)) {
+    } else if (userRole === 'manager' && !managerPages.includes(to.path) && !to.path.startsWith('/dashboard/')) {
       return next('/dashboard');
     }
   }

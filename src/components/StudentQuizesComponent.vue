@@ -48,6 +48,7 @@
 <script>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router'; // Add this import
 import axios from 'axios';
 import moment from 'moment';
 import ErrorPopupComponent from './ErrorPopup.vue';
@@ -59,6 +60,7 @@ export default {
   },
   setup() {
     const store = useStore();
+    const router = useRouter(); // Add this line
     const assignedQuizzes = ref([]);
     const quizzes = ref({});
     const loading = ref(true);
@@ -181,7 +183,11 @@ export default {
     };
 
     const attemptQuiz = (quiz) => {
-      console.log('Attempting quiz:', quiz);
+      router.push({
+        name: 'AttemptQuiz',
+        params: { quizId: quiz.quiz_id },
+        query: { assignmentId: quiz.id }
+      });
     };
 
     const closeErrorPopup = () => {

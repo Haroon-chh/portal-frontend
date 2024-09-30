@@ -4,6 +4,7 @@
   </div>
   <div class="content">
     <component :is="getComponentByRole()" />
+    <router-view></router-view>
   </div>
 </template>
 
