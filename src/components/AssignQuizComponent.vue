@@ -217,6 +217,9 @@ export default {
         });
         successMessage.value = response.data.message || 'Quiz scheduled successfully!';
         showSuccess.value = true;
+        setTimeout(() => {
+          showSuccess.value = false;
+        }, 3000);
         closeAssignModal();
       } catch (error) {
         console.error('Error assigning quiz:', error);
@@ -227,6 +230,9 @@ export default {
           errorMessage.value = 'Failed to assign quiz. Please try again later.';
         }
         showError.value = true;
+        setTimeout(() => {
+          showError.value = false;
+        }, 3000);
       }
     };
 

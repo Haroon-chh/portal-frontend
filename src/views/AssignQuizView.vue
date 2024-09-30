@@ -1,19 +1,28 @@
 <template>
     <Header title="Assign Quiz" />
   <div class="assign-quiz-view">
+    <div class="content">
+      <AssignQuizComponent />
+      
+      <!-- Added AssignedQuizAdminComponent -->
+      <div class="mt-5">
+        <AssignedQuizAdminComponent />
+      </div>
+    </div>
+    </div>
     
-    <AssignQuizComponent />
-  </div>
 </template>
 
 <script>
 import AssignQuizComponent from '../components/AssignQuizComponent.vue';
+import AssignedQuizAdminComponent from '../components/AssignedQuizAdminComponent.vue';
 import Header from '../components/HeaderComponent.vue';
 
 export default {
   name: 'AssignQuizView',
   components: {
     AssignQuizComponent,
+    AssignedQuizAdminComponent,
     Header
   },
 };
@@ -31,7 +40,7 @@ export default {
   margin-top: 60px; /* Adjust based on your header height */
 }
 
-h1 {
+h1, h2 {
   color: #333;
   text-align: center;
 }
@@ -48,7 +57,7 @@ h1 {
     margin-top: 40px;
   }
 
-  h1 {
+  h1, h2 {
     font-size: 24px;
   }
 }
@@ -63,8 +72,8 @@ h1 {
     padding: 5px;
   }
 
-  h1 {
-    font-size: 15px;
+  h1, h2 {
+    font-size: 20px;
   }
 }
 </style>
