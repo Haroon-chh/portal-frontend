@@ -38,7 +38,7 @@
             <span>Login with Facebook</span>
           </button>
           <hr>
-          <p class="mt-2 pt-2">Not a user? <router-link to="/registration" class="btn btn-primary">Sign Up</router-link></p>
+          <p class="mt-2 pt-2 me-1">Apply as student<router-link to="/registration" class="btn btn-primary ms-2">Apply</router-link></p>
         </div>
       </div>
     </div>

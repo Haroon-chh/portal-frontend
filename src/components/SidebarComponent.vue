@@ -39,7 +39,7 @@
 
       <!-- Manager-specific options -->
       <template v-if="authUserRole === 'manager'">
-        <router-link to="/dashboard/assign-quizzes" class="menu-item">
+        <router-link to="/dashboard/assign-quiz" class="menu-item">
           <span class="material-icons">quiz</span>
           <span v-if="isExpanded" class="text">Assign Quizzes</span>
         </router-link>
