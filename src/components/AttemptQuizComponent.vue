@@ -4,22 +4,37 @@
       <h2 class="mb-4">{{ quiz.title }}</h2>
       <p>{{ quiz.description }}</p>
       
-      <h3>Instructions:</h3>
-      <ul>
-        <li>Please allow access to your camera and microphone before starting the quiz.</li>
-        <li>Your video will be recorded during the quiz session.</li>
-        <li>Ensure you have a stable internet connection.</li>
-        <li>Do not leave the quiz page or switch tabs during the quiz.</li>
-        <li>Answer all questions to the best of your ability.</li>
-      </ul>
+      <div class="row">
+        <div class="col-md-8">
+          <h3 class="mb-3">Instructions:</h3>
+          <ul class="list-group">
+            <li class="list-group-item"><i class="bi bi-camera-video me-2"></i>Please allow access to your camera and microphone before starting the quiz.</li>
+            <li class="list-group-item"><i class="bi bi-record-circle me-2"></i>Your video will be recorded during the quiz session.</li>
+            <li class="list-group-item"><i class="bi bi-wifi me-2"></i>Ensure you have a stable internet connection.</li>
+            <li class="list-group-item"><i class="bi bi-window-desktop me-2"></i>Do not leave the quiz page or switch tabs during the quiz.</li>
+            <li class="list-group-item"><i class="bi bi-pencil-square me-2"></i>Answer all questions to the best of your ability.</li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h5 class="card-title">Quiz Details</h5>
+              <p class="card-text"><strong>Allowed Time:</strong> {{ formatTime(timeRemaining) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <button @click="startQuiz" class="btn btn-primary mt-3">Start Quiz</button>
+      <button @click="startQuiz" class="btn btn-primary mt-4">Start Quiz</button>
     </div>
 
     <div v-else-if="quizStarted && quiz">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>{{ quiz.title }}</h2>
-        <div class="timer">Time Remaining: {{ formatTime(timeRemaining) }}</div>
+        <div class="timer-container">
+          <i class="bi bi-clock me-2"></i>
+          <span class="timer">Time Remaining: {{ formatTime(timeRemaining) }}</span>
+        </div>
       </div>
 
       <div v-for="(question, index) in questions" :key="index" class="card mb-4">
@@ -225,8 +240,33 @@ export default {
 </script>
 
 <style scoped>
+.list-group-item {
+  display: flex;
+  align-items: center;
+}
+
+.list-group-item i {
+  font-size: 1.2rem;
+  margin-right: 10px;
+}
+
+.timer-container {
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 25px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
 .timer {
   font-size: 1.2rem;
   font-weight: bold;
+  color: #007bff;
+}
+
+.bi-clock {
+  font-size: 1.4rem;
+  color: #007bff;
 }
 </style>
