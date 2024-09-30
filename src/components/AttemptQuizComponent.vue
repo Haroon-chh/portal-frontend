@@ -28,39 +28,65 @@
       <button @click="startQuiz" class="btn btn-primary mt-4">Start Quiz</button>
     </div>
 
-    <div v-else-if="quizStarted && quiz">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>{{ quiz.title }}</h2>
-        <div class="timer-container">
-          <i class="bi bi-clock me-2"></i>
-          <span class="timer">Time Remaining: {{ formatTime(timeRemaining) }}</span>
-        </div>
-      </div>
-
-      <div v-for="(question, index) in questions" :key="index" class="card mb-4">
-        <div class="card-body">
-          <h5 class="card-title">Question {{ index + 1 }}</h5>
-          <p class="card-text">{{ question.question }}</p>
-          <div v-for="(option, key) in question.options" :key="key" class="form-check">
-            <input
-              class="form-check-input"
-              type="radio"
-              :id="`q${index}_${key}`"
-              :name="`question${index}`"
-              :value="key"
-              v-model="userAnswers[index]"
+    <!-- Quiz Modal -->
+    <div v-if="quizStarted" class="modal d-block" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ quiz.title }}</h5>
+            <div class="timer-container">
+              <i class="bi bi-clock me-2"></i>
+              <span class="timer">Time Remaining: {{ formatTime(timeRemaining) }}</span>
+            </div>
+          </div>
+          <div class="modal-body">
+            <h5>Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</h5>
+            <p>{{ currentQuestion.question }}</p>
+            <div v-for="(option, key) in currentQuestion.options" :key="key" class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                :id="`q${currentQuestionIndex}_${key}`"
+                :name="`question${currentQuestionIndex}`"
+                :value="key"
+                v-model="userAnswers[currentQuestionIndex]"
+              >
+              <label class="form-check-label" :for="`q${currentQuestionIndex}_${key}`">
+                {{ option }}
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button 
+              class="btn btn-primary" 
+              @click="nextQuestion" 
+              :disabled="!userAnswers[currentQuestionIndex]"
             >
-            <label class="form-check-label" :for="`q${index}_${key}`">
-              {{ option }}
-            </label>
+              {{ isLastQuestion ? 'Finish Quiz' : 'Next' }}
+            </button>
           </div>
         </div>
       </div>
-
-      <button @click="submitQuiz" class="btn btn-success">Submit Quiz</button>
     </div>
 
-    <div v-else>
+    <!-- Result Modal -->
+    <div v-if="quizCompleted" class="modal d-block" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Quiz Completed</h5>
+          </div>
+          <div class="modal-body">
+            <p>Your score: {{ score }}%</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" @click="closeQuiz">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="!quiz">
       <p>Loading quiz...</p>
     </div>
 
@@ -69,7 +95,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
@@ -83,18 +109,23 @@ export default {
     const quiz = ref(null);
     const questions = ref([]);
     const quizStarted = ref(false);
+    const quizCompleted = ref(false);
     const userAnswers = ref([]);
     const timeRemaining = ref(0);
     const videoElement = ref(null);
     const mediaRecorder = ref(null);
     const recordedChunks = ref([]);
+    const currentQuestionIndex = ref(0);
+    const score = ref(0);
 
     const quizId = parseInt(route.params.quizId);
     const assignmentId = parseInt(route.query.assignmentId);
 
+    const currentQuestion = computed(() => questions.value[currentQuestionIndex.value] || {});
+    const isLastQuestion = computed(() => currentQuestionIndex.value === questions.value.length - 1);
+
     const fetchQuizData = async () => {
       try {
-        // Fetch all quizzes
         const quizzesResponse = await axios.get(`${process.env.VUE_APP_API_URL}/quizzes`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
@@ -103,7 +134,6 @@ export default {
           },
         });
 
-        // Filter out the specific quiz
         const allQuizzes = quizzesResponse.data.data;
         const selectedQuiz = allQuizzes.find(q => q.id === quizId);
 
@@ -111,7 +141,6 @@ export default {
           throw new Error('Quiz not found');
         }
 
-        // Fetch assigned quizzes for the student
         const userId = store.getters.getLoggedUser.id;
         const assignedQuizzesResponse = await axios.get(`${process.env.VUE_APP_API_URL}/assigned-quizzes/${userId}`, {
           headers: {
@@ -139,7 +168,6 @@ export default {
         timeRemaining.value = assignedQuiz.duration * 60; // Convert minutes to seconds
       } catch (error) {
         console.error('Error fetching quiz data:', error);
-        // Handle error (e.g., show error message, redirect to dashboard)
       }
     };
 
@@ -155,13 +183,42 @@ export default {
       }
     };
 
+    const nextQuestion = () => {
+      if (isLastQuestion.value) {
+        finishQuiz();
+      } else {
+        currentQuestionIndex.value++;
+      }
+    };
+
+    const finishQuiz = () => {
+      stopRecording();
+      calculateScore();
+      quizCompleted.value = true;
+      quizStarted.value = false;
+    };
+
+    const calculateScore = () => {
+      let correctAnswers = 0;
+      questions.value.forEach((question, index) => {
+        if (userAnswers.value[index] === question.ans) {
+          correctAnswers++;
+        }
+      });
+      score.value = Math.round((correctAnswers / questions.value.length) * 100);
+    };
+
+    const closeQuiz = () => {
+      router.push({ name: 'Dashboard' });
+    };
+
     const startTimer = () => {
       const timer = setInterval(() => {
         if (timeRemaining.value > 0) {
           timeRemaining.value--;
         } else {
           clearInterval(timer);
-          submitQuiz();
+          finishQuiz();
         }
       }, 1000);
     };
@@ -192,30 +249,6 @@ export default {
       }
     };
 
-    const submitQuiz = async () => {
-      stopRecording();
-      const videoBlob = new Blob(recordedChunks.value, { type: 'video/webm' });
-      const formData = new FormData();
-      formData.append('video', videoBlob, 'quiz_recording.webm');
-      formData.append('answers', JSON.stringify(userAnswers.value));
-      formData.append('assignment_id', assignmentId);
-
-      try {
-        await axios.post(`${process.env.VUE_APP_API_URL}/submit-quiz`, formData, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'multipart/form-data',
-            'ngrok-skip-browser-warning': 'true',
-          },
-        });
-        // Handle successful submission (e.g., show success message, redirect to dashboard)
-        router.push({ name: 'Dashboard' });
-      } catch (error) {
-        console.error('Error submitting quiz:', error);
-        // Handle error (e.g., show error message)
-      }
-    };
-
     onMounted(() => {
       fetchQuizData();
     });
@@ -228,12 +261,18 @@ export default {
       quiz,
       questions,
       quizStarted,
+      quizCompleted,
       userAnswers,
       timeRemaining,
       videoElement,
+      currentQuestionIndex,
+      currentQuestion,
+      isLastQuestion,
+      score,
       startQuiz,
+      nextQuestion,
       formatTime,
-      submitQuiz,
+      closeQuiz,
     };
   }
 };
@@ -268,5 +307,9 @@ export default {
 .bi-clock {
   font-size: 1.4rem;
   color: #007bff;
+}
+
+.modal {
+  background-color: rgba(0, 0, 0, 0.5);
 }
 </style>
