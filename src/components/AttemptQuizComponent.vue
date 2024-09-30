@@ -29,36 +29,38 @@
     </div>
 
     <!-- Quiz Modal -->
-    <div v-if="quizStarted" class="modal d-block" tabindex="-1">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ quiz.title }}</h5>
-            <div class="timer-container">
-              <i class="bi bi-clock me-2"></i>
-              <span class="timer">Time Remaining: {{ formatTime(timeRemaining) }}</span>
+    <div v-if="quizStarted" class="quiz-modal-overlay">
+      <div class="timer-container-outside">
+        <i class="bi bi-clock me-2"></i>
+        <span class="timer">Time Remaining: {{ formatTime(timeRemaining) }}</span>
+      </div>
+      <div class="quiz-modal">
+        <div class="quiz-modal-content">
+          <div class="quiz-modal-header">
+            <h3 class="quiz-modal-title">{{ quiz.title }}</h3>
+          </div>
+          <div class="quiz-modal-body">
+            <h4>Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</h4>
+            <p class="question-text">{{ currentQuestion.question }}</p>
+            <div class="options-container">
+              <div v-for="(option, key) in currentQuestion.options" :key="key" class="option">
+                <input
+                  class="option-input"
+                  type="radio"
+                  :id="`q${currentQuestionIndex}_${key}`"
+                  :name="`question${currentQuestionIndex}`"
+                  :value="key"
+                  v-model="userAnswers[currentQuestionIndex]"
+                >
+                <label class="option-label" :for="`q${currentQuestionIndex}_${key}`">
+                  {{ option }}
+                </label>
+              </div>
             </div>
           </div>
-          <div class="modal-body">
-            <h5>Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</h5>
-            <p>{{ currentQuestion.question }}</p>
-            <div v-for="(option, key) in currentQuestion.options" :key="key" class="form-check">
-              <input
-                class="form-check-input"
-                type="radio"
-                :id="`q${currentQuestionIndex}_${key}`"
-                :name="`question${currentQuestionIndex}`"
-                :value="key"
-                v-model="userAnswers[currentQuestionIndex]"
-              >
-              <label class="form-check-label" :for="`q${currentQuestionIndex}_${key}`">
-                {{ option }}
-              </label>
-            </div>
-          </div>
-          <div class="modal-footer">
+          <div class="quiz-modal-footer">
             <button 
-              class="btn btn-primary" 
+              class="btn btn-primary btn-lg" 
               @click="nextQuestion" 
               :disabled="!userAnswers[currentQuestionIndex]"
             >
@@ -70,17 +72,35 @@
     </div>
 
     <!-- Result Modal -->
-    <div v-if="quizCompleted" class="modal d-block" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Quiz Completed</h5>
+    <div v-if="quizCompleted" class="result-modal-overlay">
+      <div class="result-modal">
+        <div class="result-modal-content">
+          <div class="result-modal-header">
+            <h2 class="result-modal-title">Quiz Completed</h2>
           </div>
-          <div class="modal-body">
-            <p>Your score: {{ score }}%</p>
+          <div class="result-modal-body">
+            <div class="score-container">
+              <div class="score-circle">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                  <path class="circle-bg"
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path class="circle"
+                    :stroke-dasharray="`${score}, 100`"
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <text x="18" y="20.35" class="percentage">{{ score }}%</text>
+                </svg>
+              </div>
+              <p class="score-label">Your Score</p>
+            </div>
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-primary" @click="closeQuiz">Close</button>
+          <div class="result-modal-footer">
+            <button class="btn-close" @click="closeQuiz">Close</button>
           </div>
         </div>
       </div>
@@ -311,5 +331,210 @@ export default {
 
 .modal {
   background-color: rgba(0, 0, 0, 0.5);
+}
+
+.quiz-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.timer-container-outside {
+  position: fixed;
+  top: 15%;
+  left: 90%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 10px 20px;
+  border-radius: 25px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 1001;
+}
+
+.quiz-modal {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.quiz-modal-content {
+  padding: 30px;
+}
+
+.quiz-modal-header {
+  margin-bottom: 20px;
+}
+
+.quiz-modal-title {
+  font-size: 24px;
+  color: #333;
+}
+
+.quiz-modal-body {
+  margin-bottom: 30px;
+}
+
+.question-text {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.options-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.option-input {
+  margin-right: 10px;
+}
+
+.option-label {
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.quiz-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-lg {
+  padding: 10px 30px;
+  font-size: 18px;
+}
+
+.result-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.result-modal {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 400px;
+}
+
+.result-modal-content {
+  padding: 30px;
+}
+
+.result-modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.result-modal-title {
+  font-size: 24px;
+  color: #333;
+}
+
+.result-modal-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.score-container {
+  text-align: center;
+}
+
+.score-circle {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 20px;
+}
+
+.circular-chart {
+  display: block;
+  margin: 10px auto;
+  max-width: 80%;
+  max-height: 250px;
+}
+
+.circle-bg {
+  fill: none;
+  stroke: #eee;
+  stroke-width: 3.8;
+}
+
+.circle {
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  animation: progress 1s ease-out forwards;
+  stroke: #4CAF50;
+}
+
+@keyframes progress {
+  0% {
+    stroke-dasharray: 0 100;
+  }
+}
+
+.percentage {
+  fill: #333;
+  font-family: sans-serif;
+  font-size: 0.5em;
+  text-anchor: middle;
+}
+
+.score-label {
+  font-size: 18px;
+  color: #666;
+}
+
+.result-modal-footer {
+  text-align: center;
+}
+
+.btn-close {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.btn-close:hover {
+  background-color: #45a049;
 }
 </style>
