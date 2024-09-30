@@ -30,6 +30,15 @@ export default createStore({
       localStorage.setItem('userRole', userData.data.role);
       localStorage.setItem('userPermissions', JSON.stringify(userData.data.permissions));
       commit('setUser', userData.data);
+      
+      // Also set the loggedUser
+      const loggedUserData = {
+        id: userData.data.id,
+        name: userData.data.name,
+        email: userData.data.email,
+      };
+      localStorage.setItem('logged_user', JSON.stringify(loggedUserData));
+      commit('setLoggedUser', loggedUserData);
     },
     logoutUser({ commit }) {
       localStorage.removeItem('access_token');
