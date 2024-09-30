@@ -12,22 +12,33 @@
     <div v-else-if="assignedQuizzes.length === 0" class="alert alert-info">
       No quizzes have been assigned to you yet.
     </div>
-    <div v-else class="list-group">
-      <div v-for="quiz in assignedQuizzes" :key="quiz.id" class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between align-items-center">
-          <h5 class="mb-1">{{ getQuizTitle(quiz.quiz_id) }}</h5>
-          <span :class="getStatusClass(quiz)">{{ getStatus(quiz) }}</span>
+    <div v-else class="row">
+      <div v-for="quiz in assignedQuizzes" :key="quiz.id" class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{{ getQuizTitle(quiz.quiz_id) }}</h5>
+            <span :class="getStatusBadgeClass(quiz)" class="badge">{{ getStatus(quiz) }}</span>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled">
+              <li><i class="bi bi-clock me-2"></i>Duration: {{ quiz.duration }} minutes</li>
+              <li><i class="bi bi-calendar-event me-2"></i>Scheduled: {{ formatDate(quiz.scheduled_at) }}</li>
+              <li><i class="bi bi-calendar-check me-2"></i>Deadline: {{ formatDate(quiz.deadline_at) }}</li>
+            </ul>
+          </div>
+          <div class="card-footer bg-white border-top-0">
+            <button 
+              v-if="!isDeadlinePassed(quiz)" 
+              class="btn btn-outline-primary w-100"
+              @click="attemptQuiz(quiz)"
+            >
+              <i class="bi bi-pencil-square me-2"></i>Attempt Quiz
+            </button>
+            <p v-else class="text-muted mb-0">
+              <i class="bi bi-exclamation-circle me-2"></i>Deadline passed
+            </p>
+          </div>
         </div>
-        <p class="mb-1">Duration: {{ quiz.duration }} minutes</p>
-        <p class="mb-1">Scheduled: {{ formatDate(quiz.scheduled_at) }}</p>
-        <p class="mb-1">Deadline: {{ formatDate(quiz.deadline_at) }}</p>
-        <button 
-          v-if="!isDeadlinePassed(quiz)" 
-          class="btn btn-primary mt-2"
-          @click="attemptQuiz(quiz)"
-        >
-          Attempt Quiz
-        </button>
       </div>
     </div>
     <ErrorPopupComponent :show="showError" :message="errorMessage" @close="closeErrorPopup" />
@@ -146,18 +157,21 @@ export default {
       }
     };
 
-    const getStatusClass = (quiz) => {
-      const status = getStatus(quiz);
-      switch (status) {
-        case 'Deadline Passed':
-          return 'text-danger';
-        case 'Scheduled':
-          return 'text-primary';
-        case 'Available':
-          return 'text-success';
-        default:
-          return '';
+    const getStatusBadgeClass = (quiz) => {
+      if (isDeadlinePassed(quiz)) {
+        return 'bg-danger'; // Red color for passed deadline
+      } else if (isQuizAvailable(quiz)) {
+        return 'bg-success'; // Green color for available quizzes
+      } else {
+        return 'bg-secondary'; // Grey color for other statuses (e.g., upcoming)
       }
+    };
+
+    const isQuizAvailable = (quiz) => {
+      const now = new Date();
+      const scheduledDate = new Date(quiz.scheduled_at);
+      const deadlineDate = new Date(quiz.deadline_at);
+      return now >= scheduledDate && now < deadlineDate;
     };
 
     const attemptQuiz = (quiz) => {
@@ -195,7 +209,7 @@ export default {
       formatDate,
       isDeadlinePassed,
       getStatus,
-      getStatusClass,
+      getStatusBadgeClass,
       attemptQuiz,
       showError,
       errorMessage,
@@ -212,5 +226,29 @@ export default {
 
 .list-group-item:hover {
   background-color: #f8f9fa;
+}
+
+.card {
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.badge {
+  font-size: 0.8rem;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.bg-success {
+  background-color: #28a745 !important;
+}
+
+.bg-secondary {
+  background-color: #6c757d !important;
 }
 </style>
