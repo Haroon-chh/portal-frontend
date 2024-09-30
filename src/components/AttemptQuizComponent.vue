@@ -517,6 +517,7 @@ export default {
 
 .result-modal-footer {
   text-align: center;
+  margin-top: 20px;
 }
 
 .btn-close {
