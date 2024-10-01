@@ -78,9 +78,8 @@
             <div class="mt-3">
               <h6>Recording:</h6>
               <video 
-                v-if="selectedResult && selectedResult.recording" 
-                :src="getRecordingUrl(selectedResult.recording).url"
-                :key="selectedResult.recording"
+                v-if="selectedResult && selectedResult.videoUrl" 
+                :src="selectedResult.videoUrl"
                 controls 
                 class="w-100"
               >
@@ -173,13 +172,58 @@ export default {
     };
 
     const getRecordingUrl = (filename) => {
-      const headers = getHeaders();
-      const params = new URLSearchParams({ filename });
-      return {
-        url: `${process.env.VUE_APP_API_URL}/recording`,
-        headers,
-        params,
-      };
+      return `${process.env.VUE_APP_API_URL}/recording?filename=${filename}`;
+    };
+
+    const fetchRecording = async (filename) => {
+      try {
+        const headers = getHeaders();
+        const response = await axios.get(getRecordingUrl(filename), {
+          headers,
+          responseType: 'blob',
+        });
+        return URL.createObjectURL(new Blob([response.data], { type: 'video/webm' }));
+      } catch (error) {
+        console.error('Error fetching recording:', error);
+        showError.value = true;
+        errorMessage.value = `Error fetching recording: ${error.message}`;
+        return null;
+      }
+    };
+
+    const showDetails = async (result) => {
+      selectedResult.value = result;
+      if (result.recording) {
+        const videoUrl = await fetchRecording(result.recording);
+        if (videoUrl) {
+          selectedResult.value.videoUrl = videoUrl;
+        }
+      }
+      const modal = document.getElementById('detailsModal');
+      modal.style.display = 'block';
+      modal.classList.add('show');
+      document.body.classList.add('modal-open');
+    };
+
+    const hideModal = () => {
+      if (selectedResult.value && selectedResult.value.videoUrl) {
+        URL.revokeObjectURL(selectedResult.value.videoUrl);
+      }
+      selectedResult.value = null;
+      const modal = document.getElementById('detailsModal');
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.classList.remove('modal-open');
+    };
+
+    const getQuizName = (quizId) => {
+      const quiz = quizzes.value.find(q => q.id === quizId);
+      return quiz ? quiz.title : 'Unknown Quiz';
+    };
+
+    const getStudentName = (studentId) => {
+      const student = students.value.find(s => s.id === studentId);
+      return student ? student.name : 'Unknown Student';
     };
 
     const fetchData = async () => {
@@ -199,31 +243,6 @@ export default {
         showError.value = true;
         errorMessage.value = `Error fetching data: ${error.message}`;
       }
-    };
-
-    const getQuizName = (quizId) => {
-      const quiz = quizzes.value.find(q => q.id === quizId);
-      return quiz ? quiz.title : 'Unknown Quiz';
-    };
-
-    const getStudentName = (studentId) => {
-      const student = students.value.find(s => s.id === studentId);
-      return student ? student.name : 'Unknown Student';
-    };
-
-    const showDetails = (result) => {
-      selectedResult.value = result;
-      const modal = document.getElementById('detailsModal');
-      modal.style.display = 'block';
-      modal.classList.add('show');
-      document.body.classList.add('modal-open');
-    };
-
-    const hideModal = () => {
-      const modal = document.getElementById('detailsModal');
-      modal.style.display = 'none';
-      modal.classList.remove('show');
-      document.body.classList.remove('modal-open');
     };
 
     onMounted(() => {
