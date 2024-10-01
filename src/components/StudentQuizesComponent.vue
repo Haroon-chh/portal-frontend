@@ -75,7 +75,6 @@ export default {
         console.error('User not logged in');
         return;
       }
-
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_URL}/assigned-quizzes/${loggedUser.value.id}`, {
           headers: {
@@ -87,8 +86,10 @@ export default {
         assignedQuizzes.value = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
       } catch (error) {
         console.error('Error fetching assigned quizzes:', error);
-        showError.value = true;
-        errorMessage.value = 'Failed to fetch assigned quizzes. Please try again later.';
+        setTimeout(() => {
+          showError.value = true;
+          errorMessage.value = 'Failed to fetch assigned quizzes. Please try again later.';
+        }, 1000);
       }
     };
 
