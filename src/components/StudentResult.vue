@@ -21,7 +21,7 @@
     <!-- Results Table -->
     <div class="table-responsive">
       <table class="table table-hover">
-        <thead>
+        <thead class="table-light">
           <tr>
             <th>Quiz Name</th>
             <th>Student Name</th>
@@ -30,7 +30,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="result in paginatedResults" :key="result.id">
+          <tr v-for="(result, index) in paginatedResults" :key="result.id" :class="{ 'table-light': index % 2 === 0 }">
             <td>{{ getQuizName(result.quiz_id) }}</td>
             <td>{{ getStudentName(result.student_id) }}</td>
             <td>{{ result.score }}%</td>
@@ -65,17 +65,31 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="detailsModalLabel">Quiz Result Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" @click="hideModal" aria-label="Close"></button>
           </div>
           <div class="modal-body" v-if="selectedResult">
-            <p><strong>Quiz:</strong> {{ getQuizName(selectedResult.quiz_id) }}</p>
-            <p><strong>Student:</strong> {{ getStudentName(selectedResult.student_id) }}</p>
-            <p><strong>Score:</strong> {{ selectedResult.score }}%</p>
-            <p><strong>Recording:</strong> {{ selectedResult.recording }}</p>
-            <!-- Add more details as needed -->
+            <div class="row">
+              <div class="col-md-6">
+                <p><strong>Quiz:</strong> {{ getQuizName(selectedResult.quiz_id) }}</p>
+                <p><strong>Student:</strong> {{ getStudentName(selectedResult.student_id) }}</p>
+                <p><strong>Score:</strong> {{ selectedResult.score }}%</p>
+              </div>
+            </div>
+            <div class="mt-3">
+              <h6>Recording:</h6>
+              <video 
+                v-if="selectedResult && selectedResult.recording" 
+                :src="getRecordingUrl(selectedResult.recording).url"
+                :key="selectedResult.recording"
+                controls 
+                class="w-100"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-secondary" @click="hideModal">Close</button>
           </div>
         </div>
       </div>
@@ -152,20 +166,25 @@ export default {
       }
     };
 
+    const getHeaders = () => {
+      return {
+        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+      };
+    };
+
+    const getRecordingUrl = (filename) => {
+      const headers = getHeaders();
+      const params = new URLSearchParams({ filename });
+      return {
+        url: `${process.env.VUE_APP_API_URL}/recording`,
+        headers,
+        params,
+      };
+    };
+
     const fetchData = async () => {
       try {
-        const accessToken = localStorage.getItem('access_token');
-        if (!accessToken) {
-          console.error('No access token found');
-          return;
-        }
-
-        const headers = {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true',
-        };
-
+        const headers = getHeaders();
         const [resultsResponse, studentsResponse, quizzesResponse] = await Promise.all([
           axios.get(`${process.env.VUE_APP_API_URL}/view-results`, { headers }),
           axios.get(`${process.env.VUE_APP_API_URL}/students`, { headers }),
@@ -200,6 +219,13 @@ export default {
       document.body.classList.add('modal-open');
     };
 
+    const hideModal = () => {
+      const modal = document.getElementById('detailsModal');
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      document.body.classList.remove('modal-open');
+    };
+
     onMounted(() => {
       fetchData();
     });
@@ -219,7 +245,9 @@ export default {
       getQuizName,
       getStudentName,
       showDetails,
+      hideModal,
       selectedResult,
+      getRecordingUrl,
     };
   },
 };
@@ -235,7 +263,7 @@ export default {
 }
 
 .table-hover tbody tr:hover {
-  background-color: #f8f9fa;
+  background-color: #f1f3f5;
 }
 
 .material-icons {
@@ -265,5 +293,35 @@ export default {
 .material-icons {
   font-size: 20px;
   color: #6c757d;
+}
+
+/* Modal styles */
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-content {
+  border-radius: 0.3rem;
+}
+
+.btn-close:focus {
+  box-shadow: none;
+}
+
+/* Add these new styles for the video player */
+video {
+  max-height: 400px;
+  object-fit: contain;
+  background-color: #000;
 }
 </style>
