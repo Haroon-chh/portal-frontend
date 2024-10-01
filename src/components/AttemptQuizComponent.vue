@@ -218,6 +218,8 @@ export default {
       }
     };
 
+    const mediaStream = ref(null);
+
     const startQuiz = async () => {
       try {
         await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -271,10 +273,10 @@ export default {
 
     const startRecording = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        videoElement.value.srcObject = stream;
+        mediaStream.value = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        videoElement.value.srcObject = mediaStream.value;
         
-        recorder.value = RecordRTC(stream, {
+        recorder.value = RecordRTC(mediaStream.value, {
           type: 'video',
           mimeType: 'video/webm',
           bitsPerSecond: 128000
@@ -287,14 +289,26 @@ export default {
       }
     };
 
+    const stopMediaStream = () => {
+      if (mediaStream.value) {
+        mediaStream.value.getTracks().forEach(track => track.stop());
+        mediaStream.value = null;
+      }
+      if (videoElement.value) {
+        videoElement.value.srcObject = null;
+      }
+    };
+
     const stopRecording = () => {
       return new Promise((resolve) => {
         if (recorder.value) {
           recorder.value.stopRecording(() => {
             const blob = recorder.value.getBlob();
+            stopMediaStream();
             resolve(blob);
           });
         } else {
+          stopMediaStream();
           resolve(null);
         }
       });
@@ -368,7 +382,7 @@ export default {
     });
 
     onUnmounted(() => {
-      stopRecording();
+      stopMediaStream();
     });
 
     return {
