@@ -120,6 +120,17 @@
     </div>
 
     <video ref="videoElement" style="display: none;"></video>
+
+    <SuccessPopupComponent 
+      :show="showSuccessPopup" 
+      :message="successMessage" 
+      @close="closeSuccessPopup" 
+    />
+    <ErrorPopupComponent 
+      :show="showErrorPopup" 
+      :message="errorMessage" 
+      @close="closeErrorPopup" 
+    />
   </div>
 </template>
 
@@ -129,9 +140,15 @@ import axios from 'axios';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import RecordRTC from 'recordrtc';
+import SuccessPopupComponent from './SuccessPopup.vue';
+import ErrorPopupComponent from './ErrorPopup.vue';
 
 export default {
   name: 'AttemptQuizComponent',
+  components: {
+    SuccessPopupComponent,
+    ErrorPopupComponent,
+  },
   setup() {
     const router = useRouter();
     const route = useRoute();
@@ -283,6 +300,11 @@ export default {
       });
     };
 
+    const showSuccessPopup = ref(false);
+    const successMessage = ref('');
+    const showErrorPopup = ref(false);
+    const errorMessage = ref('');
+
     const submitQuizToAPI = async () => {
       if (isSubmitting.value) return;
       isSubmitting.value = true;
@@ -299,39 +321,39 @@ export default {
         formData.append('score', score.value);
         formData.append('recording', videoBlob, 'quiz_recording.webm');
 
-        // Log FormData contents
-        for (let [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
-        }
-
         const response = await axios.post(`${process.env.VUE_APP_API_URL}/submit-quiz`, formData, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
             'Content-Type': 'multipart/form-data',
           },
           timeout: 300000, // 5 minutes timeout
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            console.log(`Upload Progress: ${percentCompleted}%`);
-          }
         });
 
-        console.log('Quiz submitted successfully!');
-        console.log('API Response:', response.data);
-
-        alert(`Quiz submitted successfully! Your score: ${response.data.data.score}%`);
-        router.push({ name: 'Dashboard' });
+        successMessage.value = `Quiz submitted successfully! Your score: ${response.data.data.score}%`;
+        showSuccessPopup.value = true;
+        setTimeout(() => {
+          router.push({ name: 'Dashboard' });
+        }, 2000);
       } catch (error) {
-        console.error('Error submitting quiz:', error);
-        if (error.response) {
-          console.error('Response data:', error.response.data);
-          console.error('Response status:', error.response.status);
-          console.error('Response headers:', error.response.headers);
+        if (error.response && error.response.data && error.response.data.error) {
+          errorMessage.value = error.response.data.error;
+        } else {
+          errorMessage.value = 'An error occurred while submitting the quiz. Please try again.';
         }
-        alert('Error submitting quiz. Please try again.');
+        showErrorPopup.value = true;
       } finally {
         isSubmitting.value = false;
       }
+    };
+
+    const closeSuccessPopup = () => {
+      showSuccessPopup.value = false;
+      successMessage.value = '';
+    };
+
+    const closeErrorPopup = () => {
+      showErrorPopup.value = false;
+      errorMessage.value = '';
     };
 
     const finishQuiz = async () => {
@@ -368,6 +390,12 @@ export default {
       finishQuiz,
       submitQuizToAPI,
       isSubmitting,
+      showSuccessPopup,
+      successMessage,
+      showErrorPopup,
+      errorMessage,
+      closeSuccessPopup,
+      closeErrorPopup,
     };
   }
 };
