@@ -75,32 +75,41 @@
     <div v-if="quizCompleted" class="result-modal-overlay">
       <div class="result-modal">
         <div class="result-modal-content">
-          <div class="result-modal-header">
-            <h2 class="result-modal-title">Quiz Completed</h2>
-          </div>
-          <div class="result-modal-body">
-            <div class="score-container">
-              <div class="score-circle">
-                <svg viewBox="0 0 36 36" class="circular-chart">
-                  <path class="circle-bg"
-                    d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <path class="circle"
-                    :stroke-dasharray="`${score}, 100`"
-                    d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <text x="18" y="20.35" class="percentage">{{ score }}%</text>
-                </svg>
-              </div>
-              <p class="score-label">Your Score</p>
+          <div v-if="isSubmitting" class="text-center">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Submitting quiz...</span>
             </div>
+            <p>Submitting quiz, please wait...</p>
           </div>
-          <div class="result-modal-footer">
-            <button class="btn-close" @click="closeQuiz">Close</button>
+          <div v-else>
+            <!-- Existing result modal content -->
+            <div class="result-modal-header">
+              <h2 class="result-modal-title">Quiz Completed</h2>
+            </div>
+            <div class="result-modal-body">
+              <div class="score-container">
+                <div class="score-circle">
+                  <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path class="circle"
+                      :stroke-dasharray="`${score}, 100`"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <text x="18" y="20.35" class="percentage">{{ score }}%</text>
+                  </svg>
+                </div>
+                <p class="score-label">Your Score</p>
+              </div>
+            </div>
+            <div class="result-modal-footer">
+              <button class="btn-close" @click="closeQuiz" :disabled="isSubmitting">Close</button>
+            </div>
           </div>
         </div>
       </div>
@@ -119,6 +128,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import { useRouter, useRoute } from 'vue-router';
 import { useStore } from 'vuex';
+import RecordRTC from 'recordrtc';
 
 export default {
   name: 'AttemptQuizComponent',
@@ -133,10 +143,10 @@ export default {
     const userAnswers = ref([]);
     const timeRemaining = ref(0);
     const videoElement = ref(null);
-    const mediaRecorder = ref(null);
-    const recordedChunks = ref([]);
+    const recorder = ref(null);
     const currentQuestionIndex = ref(0);
     const score = ref(0);
+    const isSubmitting = ref(false);
 
     const quizId = parseInt(route.params.quizId);
     const assignmentId = parseInt(route.query.assignmentId);
@@ -211,14 +221,6 @@ export default {
       }
     };
 
-    const finishQuiz = async () => {
-      stopRecording();
-      calculateScore();
-      await submitQuizToAPI();
-      quizCompleted.value = true;
-      quizStarted.value = false;
-    };
-
     const calculateScore = () => {
       let correctAnswers = 0;
       questions.value.forEach((question, index) => {
@@ -251,46 +253,72 @@ export default {
     };
 
     const startRecording = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      videoElement.value.srcObject = stream;
-      mediaRecorder.value = new MediaRecorder(stream);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        videoElement.value.srcObject = stream;
+        
+        recorder.value = RecordRTC(stream, {
+          type: 'video',
+          mimeType: 'video/webm',
+          bitsPerSecond: 128000
+        });
 
-      mediaRecorder.value.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunks.value.push(event.data);
-        }
-      };
-
-      mediaRecorder.value.start();
-    };
-
-    const stopRecording = () => {
-      if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
-        mediaRecorder.value.stop();
+        recorder.value.startRecording();
+      } catch (error) {
+        console.error('Error starting recording:', error);
+        alert('Failed to start recording. Please check your camera and microphone permissions.');
       }
     };
 
+    const stopRecording = () => {
+      return new Promise((resolve) => {
+        if (recorder.value) {
+          recorder.value.stopRecording(() => {
+            const blob = recorder.value.getBlob();
+            resolve(blob);
+          });
+        } else {
+          resolve(null);
+        }
+      });
+    };
+
     const submitQuizToAPI = async () => {
+      if (isSubmitting.value) return;
+      isSubmitting.value = true;
+
       try {
+        const videoBlob = await stopRecording();
+        
+        if (!videoBlob) {
+          throw new Error('No video recorded');
+        }
+
         const formData = new FormData();
         formData.append('quiz_instance_id', assignmentId);
         formData.append('score', score.value);
-        
-        // Create video blob and append to formData
-        const videoBlob = new Blob(recordedChunks.value, { type: 'video/mp4' });
-        formData.append('recording', videoBlob, 'quiz_recording.mp4');
-        
+        formData.append('recording', videoBlob, 'quiz_recording.webm');
+
+        // Log FormData contents
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
+        }
+
         const response = await axios.post(`${process.env.VUE_APP_API_URL}/submit-quiz`, formData, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
             'Content-Type': 'multipart/form-data',
           },
+          timeout: 300000, // 5 minutes timeout
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Upload Progress: ${percentCompleted}%`);
+          }
         });
-        
+
         console.log('Quiz submitted successfully!');
         console.log('API Response:', response.data);
-        
-        // Handle successful submission (e.g., show a success message, redirect)
+
         alert(`Quiz submitted successfully! Your score: ${response.data.data.score}%`);
         router.push({ name: 'Dashboard' });
       } catch (error) {
@@ -298,9 +326,19 @@ export default {
         if (error.response) {
           console.error('Response data:', error.response.data);
           console.error('Response status:', error.response.status);
+          console.error('Response headers:', error.response.headers);
         }
         alert('Error submitting quiz. Please try again.');
+      } finally {
+        isSubmitting.value = false;
       }
+    };
+
+    const finishQuiz = async () => {
+      calculateScore();
+      await submitQuizToAPI();
+      quizCompleted.value = true;
+      quizStarted.value = false;
     };
 
     onMounted(() => {
@@ -329,6 +367,7 @@ export default {
       closeQuiz,
       finishQuiz,
       submitQuizToAPI,
+      isSubmitting,
     };
   }
 };
