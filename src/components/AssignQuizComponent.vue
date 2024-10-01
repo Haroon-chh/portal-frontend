@@ -194,7 +194,7 @@ export default {
     };
 
     const assignQuiz = async () => {
-      const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
+      const currentTime = moment().add(1, 'minute').format('YYYY-MM-DD HH:mm:ss');
       const deadlineTime = moment(selectedDeadline.value).format('YYYY-MM-DD HH:mm:ss');
 
       const data = {
@@ -202,19 +202,21 @@ export default {
         assigned_to: parseInt(selectedStudent.value.id),
         duration: parseInt(selectedDuration.value),
         scheduled_at: currentTime,
-        deadline_at: deadlineTime,
+        deadline_at: deadlineTime
       };
 
-    //   console.log('Sending data:', data);  // Log the data being sent
+      console.log('Data being sent:', JSON.stringify(data));
 
       try {
         const response = await axios.post(`${process.env.VUE_APP_API_URL}/assign-quiz`, data, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'ngrok-skip-browser-warning': 'true',
           },
         });
+        console.log('Response:', response.data);
         successMessage.value = response.data.message || 'Quiz scheduled successfully!';
         showSuccess.value = true;
         setTimeout(() => {
@@ -224,8 +226,10 @@ export default {
       } catch (error) {
         console.error('Error assigning quiz:', error);
         if (error.response) {
-          console.error('Error response:', error.response.data);  // Log the error response
-          errorMessage.value = error.response.data.message || 'Failed to assign quiz. Please check your input and try again.';
+          console.error('Error status:', error.response.status);
+          console.error('Error headers:', error.response.headers);
+          console.error('Error data:', JSON.stringify(error.response.data));
+          errorMessage.value = error.response.data.message || error.response.data.error || 'Failed to assign quiz. Please check your input and try again.';
         } else {
           errorMessage.value = 'Failed to assign quiz. Please try again later.';
         }
