@@ -1,6 +1,6 @@
 <template>
   <div class="container mt-4">
-    <h2 class="mb-4"><span class="material-icons">school</span> Students List</h2>
+    <h2 class="mb-4"><span class="material-icons">assessment</span> Quiz Results</h2>
 
     <!-- Search bar -->
     <div class="mb-4 search-container">
@@ -13,24 +13,35 @@
           @input="handleSearch"
           type="text" 
           class="form-control form-control-sm" 
-          placeholder="Search student by name..."
+          placeholder="Search by quiz or student name..."
         >
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="student in paginatedStudents" :key="student.id">
-        <div class="card p-3 mb-2 student-card">
-          <h5>{{ student.name }}</h5>
-          <p class="mb-1">Email: {{ student.email }}</p>
-          <p class="mb-1">Phone: {{ student.phone }}</p>
-          <div class="text-center mt-3">
-            <button class="btn btn-primary btn-sm" @click="viewResults(student.id)">
-              View Results
-            </button>
-          </div>
-        </div>
-      </div>
+    <!-- Results Table -->
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Quiz Name</th>
+            <th>Student Name</th>
+            <th>Score</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="result in paginatedResults" :key="result.id">
+            <td>{{ getQuizName(result.quiz_id) }}</td>
+            <td>{{ getStudentName(result.student_id) }}</td>
+            <td>{{ result.score }}%</td>
+            <td>
+              <button class="btn btn-primary btn-sm" @click="showDetails(result)">
+                View Details
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Pagination -->
@@ -48,8 +59,30 @@
       </ul>
     </nav>
 
-    <SuccessPopup :show="showSuccess" :message="successMessage" />
-    <ErrorPopup :show="showError" :message="errorMessage" />
+    <!-- Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="detailsModalLabel">Quiz Result Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" v-if="selectedResult">
+            <p><strong>Quiz:</strong> {{ getQuizName(selectedResult.quiz_id) }}</p>
+            <p><strong>Student:</strong> {{ getStudentName(selectedResult.student_id) }}</p>
+            <p><strong>Score:</strong> {{ selectedResult.score }}%</p>
+            <p><strong>Recording:</strong> {{ selectedResult.recording }}</p>
+            <!-- Add more details as needed -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <SuccessPopup :show="showSuccess" :message="successMessage" @close="showSuccess = false" />
+    <ErrorPopup :show="showError" :message="errorMessage" @close="showError = false" />
   </div>
 </template>
 
@@ -66,30 +99,34 @@ export default {
     ErrorPopup,
   },
   setup() {
+    const results = ref([]);
     const students = ref([]);
+    const quizzes = ref([]);
     const showSuccess = ref(false);
     const showError = ref(false);
     const successMessage = ref('');
     const errorMessage = ref('');
     const searchQuery = ref('');
     const currentPage = ref(1);
-    const itemsPerPage = 12;
+    const itemsPerPage = 10;
+    const selectedResult = ref(null);
 
-    const filteredStudents = computed(() => {
+    const filteredResults = computed(() => {
       if (searchQuery.value) {
-        return students.value.filter(student => 
-          student.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+        return results.value.filter(result => 
+          getQuizName(result.quiz_id).toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          getStudentName(result.student_id).toLowerCase().includes(searchQuery.value.toLowerCase())
         );
       }
-      return students.value;
+      return results.value;
     });
 
-    const totalPages = computed(() => Math.ceil(filteredStudents.value.length / itemsPerPage));
+    const totalPages = computed(() => Math.ceil(filteredResults.value.length / itemsPerPage));
 
-    const paginatedStudents = computed(() => {
+    const paginatedResults = computed(() => {
       const start = (currentPage.value - 1) * itemsPerPage;
       const end = start + itemsPerPage;
-      return filteredStudents.value.slice(start, end);
+      return filteredResults.value.slice(start, end);
     });
 
     const displayedPages = computed(() => {
@@ -115,7 +152,7 @@ export default {
       }
     };
 
-    const fetchStudents = async () => {
+    const fetchData = async () => {
       try {
         const accessToken = localStorage.getItem('access_token');
         if (!accessToken) {
@@ -123,37 +160,52 @@ export default {
           return;
         }
 
-        const response = await axios.get(`${process.env.VUE_APP_API_URL}/students`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
-          },
-        });
+        const headers = {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        };
 
-        students.value = response.data.data;
+        const [resultsResponse, studentsResponse, quizzesResponse] = await Promise.all([
+          axios.get(`${process.env.VUE_APP_API_URL}/view-results`, { headers }),
+          axios.get(`${process.env.VUE_APP_API_URL}/students`, { headers }),
+          axios.get(`${process.env.VUE_APP_API_URL}/quizzes`, { headers }),
+        ]);
+
+        results.value = resultsResponse.data.data;
+        students.value = studentsResponse.data.data;
+        quizzes.value = quizzesResponse.data.data;
       } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error fetching data:', error);
         showError.value = true;
-        errorMessage.value = `Error fetching students: ${error.message}`;
-        setTimeout(() => {
-          showError.value = false;
-        }, 3000);
+        errorMessage.value = `Error fetching data: ${error.message}`;
       }
     };
 
-    const viewResults = (studentId) => {
-      // Implement the logic to view results for a specific student
-      console.log(`Viewing results for student ID: ${studentId}`);
-      // You can navigate to another route or open a modal to show results
+    const getQuizName = (quizId) => {
+      const quiz = quizzes.value.find(q => q.id === quizId);
+      return quiz ? quiz.title : 'Unknown Quiz';
+    };
+
+    const getStudentName = (studentId) => {
+      const student = students.value.find(s => s.id === studentId);
+      return student ? student.name : 'Unknown Student';
+    };
+
+    const showDetails = (result) => {
+      selectedResult.value = result;
+      const modal = document.getElementById('detailsModal');
+      modal.style.display = 'block';
+      modal.classList.add('show');
+      document.body.classList.add('modal-open');
     };
 
     onMounted(() => {
-      fetchStudents();
+      fetchData();
     });
 
     return {
-      paginatedStudents,
+      paginatedResults,
       showSuccess,
       showError,
       successMessage,
@@ -164,21 +216,26 @@ export default {
       totalPages,
       displayedPages,
       changePage,
-      viewResults,
+      getQuizName,
+      getStudentName,
+      showDetails,
+      selectedResult,
     };
   },
 };
 </script>
 
 <style scoped>
-.student-card {
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  transition: box-shadow 0.3s ease;
+.table {
+  background-color: white;
 }
 
-.student-card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+.table th, .table td {
+  border: none;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa;
 }
 
 .material-icons {
@@ -208,11 +265,5 @@ export default {
 .material-icons {
   font-size: 20px;
   color: #6c757d;
-}
-
-@media (max-width: 576px) {
-  .student-card {
-    margin-bottom: 15px;
-  }
 }
 </style>
