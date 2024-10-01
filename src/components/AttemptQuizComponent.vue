@@ -211,9 +211,10 @@ export default {
       }
     };
 
-    const finishQuiz = () => {
+    const finishQuiz = async () => {
       stopRecording();
       calculateScore();
+      await submitQuizToAPI();
       quizCompleted.value = true;
       quizStarted.value = false;
     };
@@ -266,6 +267,51 @@ export default {
     const stopRecording = () => {
       if (mediaRecorder.value && mediaRecorder.value.state !== 'inactive') {
         mediaRecorder.value.stop();
+        mediaRecorder.value.onstop = () => {
+          saveRecordedVideo();
+        };
+      }
+    };
+
+    const saveRecordedVideo = () => {
+      const blob = new Blob(recordedChunks.value, { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      document.body.appendChild(a);
+      a.style = 'display: none';
+      a.href = url;
+      a.download = `quiz_${quiz.value.id}_recording.mp4`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    };
+
+    const submitQuizToAPI = async () => {
+      try {
+        const formData = new FormData();
+        formData.append('quiz_instance_id', assignmentId);
+        
+        // Create video blob and append to formData
+        const videoBlob = new Blob(recordedChunks.value, { type: 'video/mp4' });
+        formData.append('recording', videoBlob, 'quiz_recording.mp4');
+        
+        // Append user answers
+        formData.append('answers', JSON.stringify(userAnswers.value));
+
+        const response = await axios.post(`${process.env.VUE_APP_API_URL}/submit-quiz`, formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'multipart/form-data',
+            'ngrok-skip-browser-warning': 'true',
+          },
+        });
+
+        // Show success popup
+        alert('Quiz submitted successfully!');
+        console.log('API Response:', response.data);
+      } catch (error) {
+        // Show error popup
+        alert('Error submitting quiz. Please try again.');
+        console.error('Error submitting quiz:', error);
       }
     };
 
@@ -293,6 +339,8 @@ export default {
       nextQuestion,
       formatTime,
       closeQuiz,
+      finishQuiz,
+      submitQuizToAPI,
     };
   }
 };

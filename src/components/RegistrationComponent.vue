@@ -7,60 +7,84 @@
           <form class="mx-1 mx-md-4" @submit.prevent="register">
             <!-- First Name and Last Name Fields -->
             <div class="d-flex flex-row align-items-center mt-5 mb-4 pb-2 form-outline">
-              <input 
-                type="text" 
-                v-model="firstName" 
-                class="form-control" 
-                required 
-              />
-              <label class="form-label">First Name</label>
+              <i class="material-icons me-3">person</i>
+              <div class="form-outline flex-fill mb-0">
+                <input 
+                  type="text" 
+                  v-model="firstName" 
+                  id="firstName"
+                  class="form-control" 
+                  required 
+                  placeholder=""
+                />
+                <label class="form-label" for="firstName">First Name</label>
+              </div>
             </div>
             <div class="d-flex flex-row align-items-center mb-4 pb-2 form-outline">
-              <input 
-                type="text" 
-                v-model="lastName" 
-                class="form-control" 
-                required 
-              />
-              <label class="form-label">Last Name</label>
+              <i class="material-icons me-3">person</i>
+              <div class="form-outline flex-fill mb-0">
+                <input 
+                  type="text" 
+                  v-model="lastName" 
+                  id="lastName"
+                  class="form-control" 
+                  required 
+                  placeholder=""
+                />
+                <label class="form-label" for="lastName">Last Name</label>
+              </div>
             </div>
   
             <!-- Email Field -->
             <div class="d-flex flex-row align-items-center mb-4 pb-2 form-outline">
-              <input 
-                type="email" 
-                v-model="email" 
-                class="form-control" 
-                required 
-              />
-              <label class="form-label">Email</label>
+              <i class="material-icons me-3">email</i>
+              <div class="form-outline flex-fill mb-0">
+                <input 
+                  type="email" 
+                  v-model="email" 
+                  id="email"
+                  class="form-control" 
+                  required 
+                  placeholder=""
+                />
+                <label class="form-label" for="email">Email</label>
+              </div>
             </div>
   
             <!-- Phone Number Field -->
             <div class="d-flex flex-row align-items-center mb-4 pb-2 form-outline">
-              <input 
-                type="tel" 
-                v-model="phone" 
-                class="form-control" 
-                required 
-              />
-              <label class="form-label">Phone Number</label>
+              <i class="material-icons me-3">phone</i>
+              <div class="form-outline flex-fill mb-0">
+                <input 
+                  type="tel" 
+                  v-model="phone" 
+                  id="phone"
+                  class="form-control" 
+                  required 
+                  placeholder=""
+                />
+                <label class="form-label" for="phone">Phone Number</label>
+              </div>
             </div>
   
             <!-- CV Upload -->
             <div class="d-flex flex-row align-items-center mb-4 pb-2 form-outline">
-              <input 
-                type="file" 
-                @change="handleFileUpload" 
-                class="form-control" 
-                required
-              />
-              <label class="form-label">Upload CV</label>
+              <i class="material-icons me-3">file_upload</i>
+              <div class="form-outline flex-fill mb-0">
+                <input 
+                  type="file" 
+                  @change="handleFileUpload" 
+                  id="cv"
+                  class="form-control" 
+                  required
+                  placeholder=""
+                />
+                <label class="form-label" for="cv">Upload CV</label>
+              </div>
             </div>
-  
             <!-- Submit Button -->
             <div class="d-flex justify-content-center mx-4 mt-4">
-              <button type="submit" class="btn btn-light btn-lg">Register</button>
+              <button type="submit" class="btn btn-primary btn-lg">Register</button>
             </div>
           </form>
           <p class="already-user">Already have an account? <a href="/login">Login</a></p>
@@ -182,7 +206,7 @@ export default {
   min-width: 55%;
   display: flex;
   overflow: hidden;
-  background-color: rgba(189, 185, 185, 0.3);
+  background-color: rgba(255, 253, 253, 0.674);
   color: black;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -225,7 +249,7 @@ export default {
   left: 5px;
   background-color: rgba(255, 255, 255, 0);
   padding: 0 5px;
-  color: white;
+  color: rgb(67, 66, 66);
   transition: 0.3s ease all;
   pointer-events: none;
   font-size: 14px;
@@ -238,6 +262,7 @@ export default {
   font-size: 16px;
   color: black;
   background-color: rgba(255, 255, 255, 0);
+  font-weight:500;
 }
 
 .already-user {
