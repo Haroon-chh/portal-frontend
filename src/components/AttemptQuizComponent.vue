@@ -640,6 +640,7 @@ export default {
 .btn-close {
   background-color: #4CAF50;
   border: none;
+  width:40px;
   color: white;
   padding: 10px 20px;
   text-align: center;
