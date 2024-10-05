@@ -5,12 +5,12 @@
         <div class="card-body p-4 p-md-5">
           <p class="text-center h2 fw-semibold mb-4 mx-1 mx-md-4 mt-2">Login as a User</p>
           <form class="mx-1 mx-md-4" @submit.prevent="login">
-            <div class="d-flex flex-row align-items-center mb-4 mt-5 pb-2 form-outline">
+            <div class="d-flex flex-row  pb-2 mt-5 pt-2  form-outline">
               <img src="../assets/email-icon.png" alt="Email Icon" class="icon-size">
               <input type="email" v-model="email" class="form-control" autocomplete="email" placeholder=" " required />
               <label class="form-label" for="email">Your Email</label>
             </div>
-            <div class="d-flex flex-row align-items-center mb-2 mt-0 form-outline">
+            <div class="d-flex flex-row mt-2 pt-2 pb-2  form-outline">
               <img src="../assets/password-icon.png" alt="Lock Icon" class="icon-size">
               <input type="password" v-model="password" class="form-control" placeholder=" " minlength="8" required />
               <label class="form-label" for="password">Password</label>
@@ -29,6 +29,7 @@
       <div class="col-lg-5 image-container d-flex justify-content-center align-items-center">
         <div class="text-center text-black w-100 h-100 p-4 d-flex flex-column justify-content-center">
           <img src="../assets/child_read.png" alt="" class="w-75 d-flex flex-column justify-content-center m-auto">
+          <h2 class="app-name mt-3 mb-4">Quizela✨</h2>
           <button class="btn btn-light border d-flex align-items-center justify-content-center shadow-sm my-3 px-1 w-100">
             <img src="../assets/google-icon.png" width="35px" alt="Google" class="p-1">
             <span>Login with Google</span>
@@ -110,7 +111,7 @@ const login = async () => {
 .login-card {
   box-shadow: 0 6px 8px rgba(0, 0, 0, 0.7);
   max-width: 1000px;
-  background-color: rgba(189, 185, 185, 0.3);
+  background-color: rgba(189, 185, 185, 0.4);
   color: black;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -152,7 +153,7 @@ const login = async () => {
 
 .form-label {
   position: absolute;
-  top: 20%;
+  top: 26%;
   left: 40px;
   background-color: rgba(255, 255, 255, 0);
   padding: 0 5px;
@@ -164,10 +165,11 @@ const login = async () => {
 
 .form-control:focus ~ .form-label,
 .form-control:not(:placeholder-shown) ~ .form-label {
-  top: -25px;
+  top: -20px;
   left: 25px;
   font-size: 16px;
   color: black;
+  font-weight: bold;
   background-color: rgba(255, 255, 255, 0);
 }
 
@@ -192,5 +194,13 @@ const login = async () => {
   .card-body {
     padding: 2rem 1rem;
   }
+}
+
+.app-name {
+  font-family: 'Pacifico', cursive; /* If you want to use a fancy font */
+  color: #074972; /* Use your app's primary color */
+  font-size: 2.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
 }
 </style>

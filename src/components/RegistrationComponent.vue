@@ -3,10 +3,11 @@
     <div class="signup-card">
       <div class="col-lg-12 form-container d-flex flex-column justify-content-center">
         <div class="card-body p-4">
-          <p class="text-center h2 fw-semibold mb-4 mx-1 mx-md-4 mt-2">Register Form</p>
+          <h1 class="text-center app-name mb-3">Quizela✨</h1>
+          <p class="text-center h2 fw-semibold mb-2 mt-2">Registeration Form</p>
           <form class="mx-1 mx-md-4" @submit.prevent="register">
             <!-- First Name and Last Name Fields -->
-            <div class="d-flex flex-row align-items-center mt-5 mb-4 pb-2 form-outline">
+            <div class="d-flex flex-row align-items-center mt-3 mb-4 pb-2 form-outline">
               <i class="material-icons me-3">person</i>
               <div class="form-outline flex-fill mb-0">
                 <input 
@@ -288,5 +289,12 @@ export default {
   color: red;
   margin-bottom: 1rem;
   text-align: center;
+}
+.app-name {
+  font-family: 'Pacifico', cursive; /* If you want to use a fancy font */
+  color: #074972; /* Use your app's primary color */
+  font-size: 2.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
 }
 </style>
