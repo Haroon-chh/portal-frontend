@@ -25,6 +25,8 @@
   </script>
 
   <style scoped>
+  @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
   .headerr {
     width: 100%;
     height: 10%;
@@ -46,6 +48,7 @@
   }
 
   h1 {
+    font-family: 'Pacifico', cursive;  /* Added Pacifico font */
     text-align: center;
     color: rgb(232, 243, 233);
     margin: 0;

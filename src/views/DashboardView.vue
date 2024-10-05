@@ -1,6 +1,6 @@
 <template>
   <div class="header">     
-    <Header title="Dashboard" />
+    <Header title=" Quizela✨" />
   </div>
   <div class="content">
     <component :is="getComponentByRole()" v-if="!isAttemptQuizRoute" />
