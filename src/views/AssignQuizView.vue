@@ -1,5 +1,5 @@
 <template>
-    <Header title="Assign Quiz" />
+    <Header title="Quizela✨" />
   <div class="assign-quiz-view">
     <div class="content">
       <AssignQuizComponent />

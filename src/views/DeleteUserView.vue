@@ -1,6 +1,6 @@
 <template>
   <div class="delete-user-view">
-    <Header title="Delete Users" />
+    <Header title="Quizela✨" />
     <div class="content">
       <div class="user-type-selector mb-4">
         <div class="form-check form-check-inline">

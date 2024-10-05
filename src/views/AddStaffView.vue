@@ -1,4 +1,6 @@
 <template>
+            <Header title="Quizela✨" />
+
     <div class="add-manager-view">
         <button @click="goBack" class="btn btn-secondary mb-4 back-button ms-5">
           <span class="material-icons">arrow_back</span> Back
@@ -12,12 +14,14 @@
 </template>
 
 <script>
+import Header from '@/components/HeaderComponent.vue';
 import AddManagerComponent from '@/components/AddStaffComponent.vue';
 
 export default {
     name: 'AddFormsView',
     components: {
-        AddManagerComponent
+        AddManagerComponent,
+        Header
     },
     methods: {
         goBack() {
@@ -31,6 +35,7 @@ export default {
 .add-manager-view {
     width: 100%;
     padding: 1rem;
+    margin-top: 5%;
 }
 
 .back-button {
