@@ -101,6 +101,7 @@
       const itemsPerPage = 12;
   
       const filteredManagers = computed(() => {
+        if (!managers.value) return []; // Return empty array if managers is undefined
         if (searchQuery.value) {
           return managers.value.filter(manager => 
             manager.name.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -109,9 +110,10 @@
         return managers.value;
       });
   
-      const totalPages = computed(() => Math.ceil(filteredManagers.value.length / itemsPerPage));
+      const totalPages = computed(() => Math.ceil((filteredManagers.value?.length || 0) / itemsPerPage));
   
       const paginatedManagers = computed(() => {
+        if (!filteredManagers.value) return []; // Return empty array if filteredManagers is undefined
         const start = (currentPage.value - 1) * itemsPerPage;
         const end = start + itemsPerPage;
         return filteredManagers.value.slice(start, end);
@@ -137,7 +139,12 @@
             },
           });
   
-          managers.value = response.data.data;
+          if (response.data && Array.isArray(response.data.data)) {
+            managers.value = response.data.data;
+          } else {
+            console.error('Unexpected response format:', response.data);
+            managers.value = [];
+          }
         } catch (error) {
           console.error('Error fetching managers:', error);
           showError.value = true;
@@ -146,6 +153,7 @@
             showError.value = false;
             errorMessage.value = '';
           }, 3000);
+          managers.value = []; // Set to empty array on error
         }
       };
   

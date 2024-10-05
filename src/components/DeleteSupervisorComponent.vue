@@ -101,6 +101,7 @@ export default {
     const itemsPerPage = 12;
 
     const filteredSupervisors = computed(() => {
+      if (!supervisors.value) return []; // Return empty array if supervisors is undefined
       if (searchQuery.value) {
         return supervisors.value.filter(supervisor => 
           supervisor.name.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -109,9 +110,10 @@ export default {
       return supervisors.value;
     });
 
-    const totalPages = computed(() => Math.ceil(filteredSupervisors.value.length / itemsPerPage));
+    const totalPages = computed(() => Math.ceil((filteredSupervisors.value?.length || 0) / itemsPerPage));
 
     const paginatedSupervisors = computed(() => {
+      if (!filteredSupervisors.value) return []; // Return empty array if filteredSupervisors is undefined
       const start = (currentPage.value - 1) * itemsPerPage;
       const end = start + itemsPerPage;
       return filteredSupervisors.value.slice(start, end);
@@ -137,7 +139,12 @@ export default {
           },
         });
 
-        supervisors.value = response.data.data;
+        if (response.data && Array.isArray(response.data.data)) {
+          supervisors.value = response.data.data;
+        } else {
+          console.error('Unexpected response format:', response.data);
+          supervisors.value = [];
+        }
       } catch (error) {
         console.error('Error fetching supervisors:', error);
         showError.value = true;
@@ -146,6 +153,7 @@ export default {
           showError.value = false;
           errorMessage.value = '';
         }, 3000);
+        supervisors.value = []; // Set to empty array on error
       }
     };
 

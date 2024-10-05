@@ -2,7 +2,7 @@
   <div class="admin-component">
     <div class="welcome-section">
       <span class="material-icons">admin_panel_settings</span>
-      <h2>Welcome Admin</h2>
+      <h2 class="mb-1">Welcome Admin</h2>
     </div>
     <ApplicationsComponent />
   </div>
